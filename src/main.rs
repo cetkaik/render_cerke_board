@@ -2,7 +2,7 @@
 extern crate image;
 extern crate num_complex;
 
-fn rawboard(square_size_in_pixel: f32) -> image::ImageBuffer<image::Rgb<u8>, std::vec::Vec<u8>> {
+fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     /* Numbers based on physical measurements */
     let tak1_color = image::Rgb([193, 193, 193]);
     let tam2hue_color = image::Rgb([204, 136, 82]);
@@ -16,7 +16,8 @@ fn rawboard(square_size_in_pixel: f32) -> image::ImageBuffer<image::Rgb<u8>, std
     let imgx = (square_size_in_pixel * cwidth) as u32;
     let imgy = (square_size_in_pixel * cheight) as u32;
 
-    let mut imgbuf = image::ImageBuffer::new(imgx, imgy);
+    /* first draw the board */
+    let mut imgbuf = image::ImageBuffer::from_pixel(imgx, imgy, tak1_color);
 
     // A redundant loop to demonstrate reading image data
     for x in 0..imgx {
@@ -28,9 +29,7 @@ fn rawboard(square_size_in_pixel: f32) -> image::ImageBuffer<image::Rgb<u8>, std
             let cx = x as f32 / square_size_in_pixel - cwidth / 2.;
             let cy = y as f32 / square_size_in_pixel - cheight / 2.;
 
-            /* first draw the board */
-            *pixel = tak1_color;
-
+            /* the board is already drawn */            
             /* then draw the squares */
             if -1.5 <= cx && cx <= 1.5 && -1.5 <= cy && cy <= 1.5 {
                 *pixel = tam2hue_color;
@@ -69,8 +68,12 @@ fn rawboard(square_size_in_pixel: f32) -> image::ImageBuffer<image::Rgb<u8>, std
 }
 
 fn main() {
-    let imgbuf = rawboard(45.0);
+    let rawboard = rawboard(45.0);
+    let (width, height) = rawboard.dimensions();
+
+    let mut imgbuf = image::RgbImage::from_pixel(width, height, image::Rgb([255, 255, 255]));
 
     // Save the image as “fractal.png”, the format is deduced from the path
-    imgbuf.save("fractal.png").unwrap();
+    rawboard.save("fractal.png").unwrap();
+    imgbuf.save("new_layer.png").unwrap();
 }
