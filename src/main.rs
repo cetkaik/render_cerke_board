@@ -48,6 +48,8 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
             }
 
             /* Now draw the lines */
+
+            /* horizontal and vertical */
             for loc in vec![-4.5, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5, 4.5] {
                 if (loc - cx).abs() <= line_width / 2.0 && cy.abs() <= 4.5 + line_width / 2.0 {
                     *pixel = line_color;
@@ -56,6 +58,22 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
                     *pixel = line_color;
                 }
             }
+
+            /* tam2nua2 corners */
+            if (2.5 - line_width * 2. - cx.abs()).abs() <= line_width / 2.0 && cy.abs() <= 0.5 - line_width * 1.5 && 0.25 <= cy.abs()  {
+                *pixel = line_color;
+            }
+            if (2.5 - line_width * 2. - cy.abs()).abs() <= line_width / 2.0 && cx.abs() <= 0.5 - line_width * 1.5 && 0.25 <= cx.abs()  {
+                *pixel = line_color;
+            }
+            if (0.5 - line_width * 2. - cy.abs()).abs() <= line_width / 2.0 && cx.abs() <= 2.5 - line_width * 1.5 && 2.25 <= cx.abs() {
+                *pixel = line_color;
+            }
+            if (0.5 - line_width * 2. - cx.abs()).abs() <= line_width / 2.0 && cy.abs() <= 2.5 - line_width * 1.5 && 2.25 <= cy.abs() {
+                *pixel = line_color;
+            }
+
+            /* tam2hue diagonal */
             if (cx + cy).abs() <= line_width * std::f32::consts::FRAC_1_SQRT_2 && cx.abs() <= 2.5 {
                 *pixel = line_color;
             }
@@ -68,7 +86,7 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
 }
 
 fn main() {
-    let rawboard = rawboard(45.0);
+    let rawboard = rawboard(100.0);
     let (width, height) = rawboard.dimensions();
 
     let mut imgbuf = image::RgbImage::from_pixel(width, height, image::Rgb([255, 255, 255]));
