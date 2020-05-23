@@ -91,11 +91,16 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     return imgbuf;
 }
 
-mod clothify;
-pub use clothify::cloth;
+mod cloth_bumpmap;
+pub use cloth_bumpmap::cloth;
 
 fn main() -> Result<(), rand_distr::NormalError> {
     let rawboard = rawboard(100.0);
     rawboard.save("fractal.png").unwrap();
-    clothify::cloth::clothify(rawboard)
+    let (width, height) = rawboard.dimensions();
+    let bumpmap = cloth_bumpmap::cloth::cloth_bumpmap(width, height)?;
+
+    bumpmap.save("bumpmap.png").unwrap();
+
+    Ok(())
 }

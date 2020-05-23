@@ -57,9 +57,7 @@ pub mod cloth {
         ])
     }
 
-    pub fn clothify(rawboard: image::RgbImage) -> Result<(), rand_distr::NormalError> {
-        let (width, height) = rawboard.dimensions();
-
+    pub fn cloth_bumpmap(width: u32, height: u32) -> Result<image::RgbImage, rand_distr::NormalError> {
         /* references :
          * https://fossies.org/linux/gimp/plug-ins/script-fu/scripts/clothify.scm
          * http://oldhome.schmorp.de/marc/pdb/plug_in_noisify.html
@@ -80,15 +78,11 @@ pub mod cloth {
         let mut horizontal = gaussian_blur_asymmetric(layer_one, blur_strength, 1.0).unwrap();
         let vertical = gaussian_blur_asymmetric(layer_two, 1.0, blur_strength).unwrap();
 
-        horizontal.save("layer_one.png").unwrap();
-        vertical.save("layer_two.png").unwrap();
-
         for (x, y, pixel) in horizontal.enumerate_pixels_mut() {
             *pixel = multiply_pixel(*pixel, *vertical.get_pixel(x, y))
         }
 
         let mut merged = horizontal;
-        merged.save("merged.png").unwrap();
 
         /* stretch contrast; this algorithm only works for a grayscale image */
         let (min, max) = get_min_max(&merged.clone().into_raw());
@@ -104,8 +98,6 @@ pub mod cloth {
             ]);
         }
 
-        merged.save("merged_stretched.png").unwrap();
-
         let distr = rand_distr::Normal::new(0., 0.1)?;
         for (_, _, pixel) in merged.enumerate_pixels_mut() {
             let v = rng.sample(distr);
@@ -118,9 +110,7 @@ pub mod cloth {
             ]);
         }
 
-        merged.save("merged_stretched_noised.png").unwrap();
-
-        Ok(())
+        Ok(merged)
     }
 
     fn get_min_max(vec: &Vec<u8>) -> (u8, u8) {
