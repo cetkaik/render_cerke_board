@@ -104,5 +104,14 @@ fn main() -> Result<(), rand_distr::NormalError> {
 
     bumpmap.save("bumpmap.png").unwrap();
 
+    let clothed = emboss::emboss::apply_bump_map(
+        rawboard,
+        bumpmap,
+        std::f64::consts::PI / 4.0 * 3.0,
+        std::f64::consts::PI / 4.0,
+    )
+    .unwrap();
+    clothed.save("clothed.png").unwrap();
+
     Ok(())
 }

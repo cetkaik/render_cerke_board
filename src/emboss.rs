@@ -1,4 +1,31 @@
 pub mod emboss {
+    pub fn apply_bump_map(
+        image: image::RgbImage,
+        bump: image::RgbImage,
+        azimuth: f64,
+        elevation: f64,
+    ) -> Option<image::RgbImage> {
+        let (width, height) = image.dimensions();
+        if (width, height) != bump.dimensions() {
+            return None;
+        }
+
+        let mut dst = image::RgbImage::new(width, height).into_raw();
+
+        emboss(
+            azimuth,
+            elevation,
+            3,
+            &bump.into_raw(),
+            &image.into_raw(),
+            &mut dst,
+            width as usize,
+            height as usize,
+        );
+
+        image::RgbImage::from_raw(width, height, dst)
+    }
+
     /*
      * ANSI C code from the article
      * "Fast Embossing Effects on Raster Image Data"
@@ -15,10 +42,10 @@ pub mod emboss {
      * */
     pub fn emboss(
         azimuth: f64,
-        elevation: f64,     /* light source direction */
-        width45: u16,       /* filter width */
-        bump: &mut Vec<u8>, /* monochrome bump image */
-        texture: &mut Vec<u8>,
+        elevation: f64, /* light source direction */
+        width45: u16,   /* filter width */
+        bump: &Vec<u8>, /* monochrome bump image */
+        texture: &Vec<u8>,
         dst: &mut Vec<u8>, /* texture & output images */
         x_size: usize,
         y_size: usize,
@@ -57,14 +84,15 @@ pub mod emboss {
         dst_offset += x_size * 3;
         texture_offset += x_size * 3;
 
-        let mut s1_minus_bump: usize;
-        let mut s2_minus_bump;
-        let mut s3_minus_bump;
+        let mut s1_minus_offsetted_bump: usize;
+        let mut s2_minus_offsetted_bump;
+        let mut s3_minus_offsetted_bump;
 
-        for _ in 1..y_size - 1 {
-            s1_minus_bump = 1;
-            s2_minus_bump = s1_minus_bump + x_size;
-            s3_minus_bump = s2_minus_bump + x_size;
+        for y in 1..y_size - 1 {
+            println!("{}", y);
+            s1_minus_offsetted_bump = 1;
+            s2_minus_offsetted_bump = s1_minus_offsetted_bump + x_size;
+            s3_minus_offsetted_bump = s2_minus_offsetted_bump + x_size;
             dst_offset += 3;
             texture_offset += 3;
 
@@ -75,18 +103,18 @@ pub mod emboss {
                  * unsigned, in others it is signed. ergo, cast to signed.
                  */
 
-                n_x = (bump[bump_offset + s1_minus_bump - 1]
-                    + bump[bump_offset + s2_minus_bump - 1]
-                    + bump[bump_offset + s3_minus_bump - 1]
-                    - bump[bump_offset + s1_minus_bump + 1]
-                    - bump[bump_offset + s2_minus_bump + 1]
-                    - bump[bump_offset + s3_minus_bump + 1]) as i32;
-                n_y = (bump[bump_offset + s3_minus_bump - 1]
-                    + bump[bump_offset + s3_minus_bump + 0]
-                    + bump[bump_offset + s3_minus_bump + 1]
-                    - bump[bump_offset + s1_minus_bump - 1]
-                    - bump[bump_offset + s1_minus_bump + 0]
-                    - bump[bump_offset + s1_minus_bump + 1]) as i32;
+                n_x = (bump[bump_offset + s1_minus_offsetted_bump - 1]
+                    + bump[bump_offset + s2_minus_offsetted_bump - 1]
+                    + bump[bump_offset + s3_minus_offsetted_bump - 1]
+                    - bump[bump_offset + s1_minus_offsetted_bump + 1]
+                    - bump[bump_offset + s2_minus_offsetted_bump + 1]
+                    - bump[bump_offset + s3_minus_offsetted_bump + 1]) as i32;
+                n_y = (bump[bump_offset + s3_minus_offsetted_bump - 1]
+                    + bump[bump_offset + s3_minus_offsetted_bump + 0]
+                    + bump[bump_offset + s3_minus_offsetted_bump + 1]
+                    - bump[bump_offset + s1_minus_offsetted_bump - 1]
+                    - bump[bump_offset + s1_minus_offsetted_bump + 0]
+                    - bump[bump_offset + s1_minus_offsetted_bump + 1]) as i32;
 
                 /* shade with distant light source */
                 if n_x == 0 && n_y == 0 {
@@ -115,9 +143,9 @@ pub mod emboss {
                 dst_offset += 1;
                 texture_offset += 1;
 
-                s1_minus_bump += 1;
-                s2_minus_bump += 1;
-                s3_minus_bump += 1;
+                s1_minus_offsetted_bump += 1;
+                s2_minus_offsetted_bump += 1;
+                s3_minus_offsetted_bump += 1;
             }
 
             texture_offset += 3;
