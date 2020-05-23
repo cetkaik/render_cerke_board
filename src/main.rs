@@ -1,4 +1,5 @@
 extern crate image;
+use rand::prelude::*;
 
 fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     /* Numbers based on physical measurements */
@@ -91,13 +92,34 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     return imgbuf;
 }
 
-fn main() {
+mod gaussian_blur_asymmetric;
+pub use gaussian_blur_asymmetric::blur;
+
+fn main() -> Result<(), rand_distr::NormalError> {
     let rawboard = rawboard(100.0);
     let (width, height) = rawboard.dimensions();
 
-    let mut imgbuf = image::RgbImage::from_pixel(width, height, image::Rgb([255, 255, 255]));
+    /* references :
+     * https://fossies.org/linux/gimp/plug-ins/script-fu/scripts/clothify.scm
+     * http://oldhome.schmorp.de/marc/pdb/plug_in_noisify.html
+     * https://docs.gimp.org/2.10/en/gimp-filter-noise-rgb.html
+     */
+    let mut rng = thread_rng();
+    let mut layer_one = image::RgbImage::new(width, height);
+    let distr = rand_distr::Normal::new(0., 0.35)?;
+    for (_, _, pixel) in layer_one.enumerate_pixels_mut() {
+        let v = rng.sample(distr);
+        let a = num::clamp(255.0 * (1. + v), 0.0, 255.0) as u8;
+        *pixel = image::Rgb([a, a, a]);
+    }
 
-    // Save the image as “fractal.png”, the format is deduced from the path
+    let layer_two = layer_one.clone();
+    let horizontal = gaussian_blur_asymmetric::blur::gaussian_blur_asymmetric(layer_one, 9.0, 1.0).unwrap();
+    let vertical = gaussian_blur_asymmetric::blur::gaussian_blur_asymmetric(layer_two, 1.0, 9.0).unwrap();
+
     rawboard.save("fractal.png").unwrap();
-    imgbuf.save("new_layer.png").unwrap();
+    horizontal.save("layer_one.png").unwrap();
+    vertical.save("layer_two.png").unwrap();
+
+    Ok(())
 }
