@@ -106,6 +106,20 @@ pub mod cloth {
 
         merged.save("merged_stretched.png").unwrap();
 
+        let distr = rand_distr::Normal::new(0., 0.1)?;
+        for (_, _, pixel) in merged.enumerate_pixels_mut() {
+            let v = rng.sample(distr);
+            let image::Rgb(data) = *pixel;
+            
+            *pixel = image::Rgb([
+                num::clamp(data[0] as f32 + 255.0 * v, 0.0, 255.0) as u8, 
+                num::clamp(data[1] as f32 + 255.0 * v, 0.0, 255.0) as u8, 
+                num::clamp(data[2] as f32 + 255.0 * v, 0.0, 255.0) as u8
+            ]);
+        }
+
+        merged.save("merged_stretched_noised.png").unwrap();
+
         Ok(())
     }
 
