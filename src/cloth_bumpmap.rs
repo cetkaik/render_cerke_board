@@ -57,7 +57,10 @@ pub mod cloth {
         ])
     }
 
-    pub fn cloth_bumpmap(width: u32, height: u32) -> Result<image::RgbImage, rand_distr::NormalError> {
+    pub fn cloth_bumpmap(
+        width: u32,
+        height: u32,
+    ) -> Result<image::RgbImage, rand_distr::NormalError> {
         /* references :
          * https://fossies.org/linux/gimp/plug-ins/script-fu/scripts/clothify.scm
          * http://oldhome.schmorp.de/marc/pdb/plug_in_noisify.html
@@ -102,11 +105,11 @@ pub mod cloth {
         for (_, _, pixel) in merged.enumerate_pixels_mut() {
             let v = rng.sample(distr);
             let image::Rgb(data) = *pixel;
-            
+
             *pixel = image::Rgb([
-                num::clamp(data[0] as f32 + 255.0 * v, 0.0, 255.0) as u8, 
-                num::clamp(data[1] as f32 + 255.0 * v, 0.0, 255.0) as u8, 
-                num::clamp(data[2] as f32 + 255.0 * v, 0.0, 255.0) as u8
+                num::clamp(data[0] as f32 + 255.0 * v, 0.0, 255.0) as u8,
+                num::clamp(data[1] as f32 + 255.0 * v, 0.0, 255.0) as u8,
+                num::clamp(data[2] as f32 + 255.0 * v, 0.0, 255.0) as u8,
             ]);
         }
 

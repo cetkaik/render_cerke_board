@@ -94,6 +94,8 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
 mod cloth_bumpmap;
 pub use cloth_bumpmap::cloth;
 
+mod emboss;
+
 fn main() -> Result<(), rand_distr::NormalError> {
     let rawboard = rawboard(100.0);
     rawboard.save("fractal.png").unwrap();
