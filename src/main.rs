@@ -1,5 +1,4 @@
 extern crate image;
-use rand::prelude::*;
 
 fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     /* Numbers based on physical measurements */
@@ -92,34 +91,11 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     return imgbuf;
 }
 
-mod gaussian_blur_asymmetric;
-pub use gaussian_blur_asymmetric::blur;
+mod clothify;
+pub use clothify::cloth;
 
 fn main() -> Result<(), rand_distr::NormalError> {
     let rawboard = rawboard(100.0);
-    let (width, height) = rawboard.dimensions();
-
-    /* references :
-     * https://fossies.org/linux/gimp/plug-ins/script-fu/scripts/clothify.scm
-     * http://oldhome.schmorp.de/marc/pdb/plug_in_noisify.html
-     * https://docs.gimp.org/2.10/en/gimp-filter-noise-rgb.html
-     */
-    let mut rng = thread_rng();
-    let mut layer_one = image::RgbImage::new(width, height);
-    let distr = rand_distr::Normal::new(0., 0.35)?;
-    for (_, _, pixel) in layer_one.enumerate_pixels_mut() {
-        let v = rng.sample(distr);
-        let a = num::clamp(255.0 * (1. + v), 0.0, 255.0) as u8;
-        *pixel = image::Rgb([a, a, a]);
-    }
-
-    let layer_two = layer_one.clone();
-    let horizontal = gaussian_blur_asymmetric::blur::gaussian_blur_asymmetric(layer_one, 9.0, 1.0).unwrap();
-    let vertical = gaussian_blur_asymmetric::blur::gaussian_blur_asymmetric(layer_two, 1.0, 9.0).unwrap();
-
     rawboard.save("fractal.png").unwrap();
-    horizontal.save("layer_one.png").unwrap();
-    vertical.save("layer_two.png").unwrap();
-
-    Ok(())
+    clothify::cloth::clothify(rawboard)
 }
