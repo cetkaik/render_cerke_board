@@ -55,26 +55,20 @@ pub mod emboss {
 
         /* mung pixels, avoiding edge pixels */
         dst_offset += x_size * 3;
-        if
-        /*let Some(_) = texture*/
-        true {
-            texture_offset += x_size * 3;
-        }
+        texture_offset += x_size * 3;
 
         let mut s1_minus_bump: usize;
         let mut s2_minus_bump;
         let mut s3_minus_bump;
 
-        for y in 1..y_size - 1 {
+        for _ in 1..y_size - 1 {
             s1_minus_bump = 1;
             s2_minus_bump = s1_minus_bump + x_size;
             s3_minus_bump = s2_minus_bump + x_size;
             dst_offset += 3;
-            if true {
-                texture_offset += 3;
-            }
+            texture_offset += 3;
 
-            for x in 1..x_size - 1 {
+            for _ in 1..x_size - 1 {
                 /*
                  * compute the normal from the bump map. the type of the expression
                  * before the cast is compiler dependent. in some cases the sum is
@@ -108,39 +102,25 @@ pub mod emboss {
                 }
 
                 /* do something with the shading result */
-                if
-                /*let Some(textur) = texture */
-                true {
-                    dst[dst_offset] = ((texture[texture_offset] as i32 * shade as i32) >> 8) as u8;
-                    dst_offset += 1;
-                    texture_offset += 1;
 
-                    dst[dst_offset] = ((texture[texture_offset] as i32 * shade as i32) >> 8) as u8;
-                    dst_offset += 1;
-                    texture_offset += 1;
+                dst[dst_offset] = ((texture[texture_offset] as i32 * shade as i32) >> 8) as u8;
+                dst_offset += 1;
+                texture_offset += 1;
 
-                    dst[dst_offset] = ((texture[texture_offset] as i32 * shade as i32) >> 8) as u8;
-                    dst_offset += 1;
-                    texture_offset += 1;
-                } /* else {
-                      dst[dst_offset] = shade;
-                      dst_offset+=1;
-                      dst[dst_offset] = shade;
-                      dst_offset+=1;
+                dst[dst_offset] = ((texture[texture_offset] as i32 * shade as i32) >> 8) as u8;
+                dst_offset += 1;
+                texture_offset += 1;
 
-                      dst[dst_offset] = shade;
-                      dst_offset+=1;
-
-                  }*/
+                dst[dst_offset] = ((texture[texture_offset] as i32 * shade as i32) >> 8) as u8;
+                dst_offset += 1;
+                texture_offset += 1;
 
                 s1_minus_bump += 1;
                 s2_minus_bump += 1;
                 s3_minus_bump += 1;
             }
 
-            if true {
-                texture_offset += 3;
-            }
+            texture_offset += 3;
 
             bump_offset += x_size;
             dst_offset += 3;
