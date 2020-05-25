@@ -1,4 +1,5 @@
 extern crate image;
+extern crate cloth_bumpmap;
 
 fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     /* Numbers based on physical measurements */
@@ -91,16 +92,13 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     return imgbuf;
 }
 
-mod cloth_bumpmap;
-pub use cloth_bumpmap::cloth;
-
 mod emboss;
 
 fn main() -> Result<(), rand_distr::NormalError> {
     let rawboard = rawboard(100.0);
     rawboard.save("fractal.png").unwrap();
     let (width, height) = rawboard.dimensions();
-    let bumpmap = cloth_bumpmap::cloth::cloth_bumpmap(width, height)?;
+    let bumpmap = cloth_bumpmap::cloth_bumpmap(width, height)?;
 
     bumpmap.save("bumpmap.png").unwrap();
 
