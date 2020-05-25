@@ -1,4 +1,11 @@
+
+const TAK1: &'static [u8] = include_bytes!("optimum.png");
+
 pub fn background_img(square_size_in_pixel: f32) -> image::RgbImage {
+    if square_size_in_pixel == 100.0 {
+        return image::load_from_memory(&TAK1).unwrap().to_rgb();
+    }
+
     let raw_board = rawboard(square_size_in_pixel);
     // If I succeed in implementing GIMP's bump_map later, then I will resurrect this code
     /*
