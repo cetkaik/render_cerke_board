@@ -103,7 +103,7 @@ pub mod emboss {
                  * unsigned, in others it is signed. ergo, cast to signed.
                  */
 
-                n_x = (bump[bump_offset + s1_minus_offsetted_bump - 1]
+                n_x = (bump[bump_offset + s1_minus_offsetted_bump - 1] /*overflow is happening!*/
                     + bump[bump_offset + s2_minus_offsetted_bump - 1]
                     + bump[bump_offset + s3_minus_offsetted_bump - 1]
                     - bump[bump_offset + s1_minus_offsetted_bump + 1]
