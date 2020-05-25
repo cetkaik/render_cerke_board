@@ -119,8 +119,10 @@ pub struct Field {
     field: HashMap<AbsoluteCoord, Piece>,
     a_side_hand: Vec<PhysicalPiece>,
     ia_side_hand: Vec<PhysicalPiece>,
+    background: image::RgbImage,
 }
 
+mod background;
 mod noise;
 
 impl Field {
@@ -239,6 +241,7 @@ pub fn new() -> Field {
         a_side_hand: Vec::new(),
         ia_side_hand: Vec::new(),
         field: hashmap,
+        background: background::background_img()
     };
 
     board
