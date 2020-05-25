@@ -73,7 +73,7 @@ pub fn rawwood(width: u32, height: u32, offsetstdev: f64) -> image::RgbImage {
     let noise = Noise::gen_noise(width as usize, height as usize);
 
     /* algorithm taken and modified from https://lodev.org/cgtutor/randomnoise.html#Wood */
-    let wavenumber = 0.0411; // dimension: # per px
+    let wavenumber = 0.0811; // dimension: # per px
     let turb = 14.6; //makes twists
     let turb_size = 32.0; //initial size of the turbulence
 
