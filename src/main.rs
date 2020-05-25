@@ -74,17 +74,16 @@ fn rawwood(width: u32, height: u32) -> image::RgbImage {
 
     let noise = Noise::gen_noise(width as usize, height as usize);
 
-    /* algorithm taken from https://lodev.org/cgtutor/randomnoise.html#Wood */
-    let xy_period = 12.0; //number of rings
-    let turb_power = 0.15; //makes twists
+    /* algorithm taken and modified from https://lodev.org/cgtutor/randomnoise.html#Wood */
+    let wavenumber = 0.0411; // dimension: # per px
+    let turb = 14.6; //makes twists
     let turb_size = 32.0; //initial size of the turbulence
 
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-        let x_value = (x as f64 - width as f64 / 2.) / (width as f64);
-        let y_value = (y as f64 - height as f64 / 2.) / (height as f64);
-        let dist_value = (x_value * x_value + y_value * y_value).sqrt()
-            + turb_power * noise.turbulence(x as f64, y as f64, turb_size) / 256.0;
-        let sine_value = 128.0 * ((2. * xy_period * dist_value * 3.14159).sin()).abs();
+        let x_value_times_scale = x as f64 - width as f64 / 2.; // dimension: px
+        let y_value_times_scale = y as f64 - height as f64 / 2.; // dimension: px
+        let dist_value_times_scale = x_value_times_scale.hypot(y_value_times_scale) + turb * noise.turbulence(x as f64, y as f64, turb_size) / 256.0;
+        let sine_value = 88.0 * ((wavenumber * dist_value_times_scale * std::f64::consts::PI).sin()).abs().powf(0.4);
         *pixel = image::Rgb([120 + sine_value as u8, 70 + sine_value as u8, 70]);
     }
 
@@ -186,8 +185,17 @@ fn main() -> Result<(), rand_distr::NormalError> {
     let rawboard = rawboard(100.0);
     rawboard.save("fractal.png").unwrap();
 
-    let rawwood = rawwood(80, 80);
-    rawwood.save("rawwood.png").unwrap();
+    let raw_wood = image::imageops::colorops::brighten(&rawwood(584, 668), 20);
+
+    raw_wood.save("rawwood.png").unwrap();
+
+    for x in 0..7 {
+        for y in 0..8 {
+            image::imageops::crop_imm(&raw_wood, 84 * x, 84 * y, 80, 80).to_image().save(format!("rawwood_{}_{}.png", x, y)).unwrap();
+        }
+    }
+
+    
 
     // If I succeed in implementing GIMP's bump_map later, then I will resurrect this code
     /*
