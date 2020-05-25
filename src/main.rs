@@ -5,7 +5,7 @@ use rand::distributions::{Distribution, Uniform};
 struct Noise {
     width: usize,
     height: usize,
-    data: Vec<Vec<f64>>
+    data: Vec<Vec<f64>>,
 }
 
 impl Noise {
@@ -23,7 +23,9 @@ impl Noise {
         }
 
         Noise {
-            width, height, data: noise
+            width,
+            height,
+            data: noise,
         }
     }
 
@@ -33,22 +35,22 @@ impl Noise {
         let fract_y = y.fract();
         let width = self.width;
         let height = self.height;
-    
+
         //wrap around
         let x1: usize = ((x as usize) + width) % width;
         let y1: usize = ((y as usize) + height) % height;
-    
+
         //neighbor values
         let x2: usize = (x1 + width - 1) % width;
         let y2: usize = (y1 + height - 1) % height;
-    
+
         //smooth the noise with bilinear interpolation
         let mut value = 0.0;
         value += fract_x * fract_y * self.data[y1][x1];
         value += (1. - fract_x) * fract_y * self.data[y1][x2];
         value += fract_x * (1. - fract_y) * self.data[y2][x1];
         value += (1. - fract_x) * (1. - fract_y) * self.data[y2][x2];
-    
+
         return value;
     }
 
@@ -56,21 +58,18 @@ impl Noise {
         /* algorithm taken from https://lodev.org/cgtutor/randomnoise.html#Wood */
         let mut value = 0.0f64;
         let mut size = initial_size;
-    
+
         while size >= 1. {
-            value += self.sample_smooth_noise(
-                x / size,
-                y / size,
-            ) * size;
+            value += self.sample_smooth_noise(x / size, y / size) * size;
             size /= 2.0;
         }
-    
+
         return 128.0 * value / initial_size;
     }
 }
 
 fn rawwood(width: u32, height: u32, offsetstdev: f64) -> image::RgbImage {
-    use rand::{*};
+    use rand::*;
     let mut imgbuf = image::RgbImage::new(width, height);
 
     let noise = Noise::gen_noise(width as usize, height as usize);
@@ -89,8 +88,12 @@ fn rawwood(width: u32, height: u32, offsetstdev: f64) -> image::RgbImage {
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
         let x_value_times_scale = x as f64 - width as f64 / 2. + offsetx; // dimension: px
         let y_value_times_scale = y as f64 - height as f64 / 2. + offsety; // dimension: px
-        let dist_value_times_scale = x_value_times_scale.hypot(y_value_times_scale) + turb * noise.turbulence(x as f64, y as f64, turb_size) / 256.0;
-        let sine_value = 88.0 * ((wavenumber * dist_value_times_scale * std::f64::consts::PI + phase).sin()).abs().powf(0.4);
+        let dist_value_times_scale = x_value_times_scale.hypot(y_value_times_scale)
+            + turb * noise.turbulence(x as f64, y as f64, turb_size) / 256.0;
+        let sine_value = 88.0
+            * ((wavenumber * dist_value_times_scale * std::f64::consts::PI + phase).sin())
+                .abs()
+                .powf(0.4);
         *pixel = image::Rgb([120 + sine_value as u8, 70 + sine_value as u8, 70]);
     }
 
@@ -188,6 +191,32 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     return imgbuf;
 }
 
+fn multiply_channel(a: u8, b: u8) -> u8 {
+    ((a as f32) * (b as f32) / 255.0) as u8
+}
+fn multiply_pixel(a: image::Rgb<u8>, b: image::Rgb<u8>) -> image::Rgb<u8> {
+    let image::Rgb(a) = a;
+    let image::Rgb(b) = b;
+    image::Rgb([
+        multiply_channel(a[0], b[0]),
+        multiply_channel(a[1], b[1]),
+        multiply_channel(a[2], b[2]),
+    ])
+}
+
+fn multiply_image(a: &image::RgbImage, b: &image::RgbImage) -> Option<image::RgbImage> {
+    let (width, height) = a.dimensions();
+    if b.dimensions() != (width, height) { return None; }
+    let mut c = image::RgbImage::new(width, height);
+    for (x, y, pixel) in c.enumerate_pixels_mut(){
+        *pixel = multiply_pixel(
+            *a.get_pixel(x, y),
+            *b.get_pixel(x, y),
+        )
+    }
+    Some(c)
+}
+
 fn main() -> Result<(), rand_distr::NormalError> {
     let rawboard = rawboard(100.0);
     rawboard.save("fractal.png").unwrap();
@@ -196,13 +225,81 @@ fn main() -> Result<(), rand_distr::NormalError> {
 
     raw_wood.save("rawwood.png").unwrap();
 
+    let mut pieces = Vec::new();
+
+    use rand::seq::SliceRandom;
     for x in 0..7 {
         for y in 0..8 {
-            image::imageops::crop_imm(&raw_wood, 84 * x, 84 * y, 80, 80).to_image().save(format!("rawwood_{}_{}.png", x, y)).unwrap();
+            let image = image::imageops::crop_imm(&raw_wood, 84 * x, 84 * y, 80, 80).to_image();
+            pieces.push(image);
         }
     }
+    let mut rng = rand::thread_rng();
+    pieces.shuffle(&mut rng);
 
-    
+    let mut i = 0;
+    for character in vec![
+        "bnuak.png",
+        "rnuak.png",
+        "bkauk.png",
+        "bkauk.png",
+        "bkauk.png",
+        "bkauk.png",
+        "bkauk.png",
+        "bkauk.png",
+        "bkauk.png",
+        "bkauk.png",
+        "rkauk.png",
+        "rkauk.png",
+        "rkauk.png",
+        "rkauk.png",
+        "rkauk.png",
+        "rkauk.png",
+        "rkauk.png",
+        "rkauk.png",
+        "bgua.png",
+        "bgua.png",
+        "rgua.png",
+        "rgua.png",
+        "bkaun.png",
+        "bkaun.png",
+        "rkaun.png",
+        "rkaun.png",
+        "bdau.png",
+        "bdau.png",
+        "rdau.png",
+        "rdau.png",
+        "bmaun.png",
+        "bmaun.png",
+        "rmaun.png",
+        "rmaun.png",
+        "bkua.png",
+        "bkua.png",
+        "rkua.png",
+        "rkua.png",
+        "btuk.png",
+        "btuk.png",
+        "rtuk.png",
+        "rtuk.png",
+        "buai.png",
+        "buai.png",
+        "ruai.png",
+        "ruai.png",
+        "bio.png",
+        "rio.png",
+        "btam.png",
+    ] {
+        let char_image = image::imageops::resize(
+            &image::open(character).unwrap().to_rgb(),
+            80,
+            80,
+            image::imageops::FilterType::CatmullRom
+        );
+
+        let res = multiply_image(&char_image, &pieces[i]).unwrap();
+        res.save(format!("rawwood_{}.png", i)).unwrap();
+        i += 1;
+    }
 
     // If I succeed in implementing GIMP's bump_map later, then I will resurrect this code
     /*
