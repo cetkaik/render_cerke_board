@@ -69,7 +69,8 @@ impl Noise {
     }
 }
 
-fn rawwood(width: u32, height: u32) -> image::RgbImage {
+fn rawwood(width: u32, height: u32, offsetstdev: f64) -> image::RgbImage {
+    use rand::{*};
     let mut imgbuf = image::RgbImage::new(width, height);
 
     let noise = Noise::gen_noise(width as usize, height as usize);
@@ -79,11 +80,17 @@ fn rawwood(width: u32, height: u32) -> image::RgbImage {
     let turb = 14.6; //makes twists
     let turb_size = 32.0; //initial size of the turbulence
 
+    let mut rng = rand::thread_rng();
+    let distr = rand_distr::Normal::new(0., offsetstdev).unwrap();
+    let offsetx = rng.sample(distr);
+    let offsety = rng.sample(distr);
+    let phase = rng.sample(Uniform::from(0.0..std::f64::consts::PI));
+
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-        let x_value_times_scale = x as f64 - width as f64 / 2.; // dimension: px
-        let y_value_times_scale = y as f64 - height as f64 / 2.; // dimension: px
+        let x_value_times_scale = x as f64 - width as f64 / 2. + offsetx; // dimension: px
+        let y_value_times_scale = y as f64 - height as f64 / 2. + offsety; // dimension: px
         let dist_value_times_scale = x_value_times_scale.hypot(y_value_times_scale) + turb * noise.turbulence(x as f64, y as f64, turb_size) / 256.0;
-        let sine_value = 88.0 * ((wavenumber * dist_value_times_scale * std::f64::consts::PI).sin()).abs().powf(0.4);
+        let sine_value = 88.0 * ((wavenumber * dist_value_times_scale * std::f64::consts::PI + phase).sin()).abs().powf(0.4);
         *pixel = image::Rgb([120 + sine_value as u8, 70 + sine_value as u8, 70]);
     }
 
@@ -185,7 +192,7 @@ fn main() -> Result<(), rand_distr::NormalError> {
     let rawboard = rawboard(100.0);
     rawboard.save("fractal.png").unwrap();
 
-    let raw_wood = image::imageops::colorops::brighten(&rawwood(584, 668), 20);
+    let raw_wood = image::imageops::colorops::brighten(&rawwood(584, 668, 40.0), 20);
 
     raw_wood.save("rawwood.png").unwrap();
 
