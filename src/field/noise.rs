@@ -1,4 +1,3 @@
-
 struct Noise {
     width: usize,
     height: usize,

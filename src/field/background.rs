@@ -1,5 +1,5 @@
-pub fn background_img() -> image::RgbImage {
-    let raw_board = rawboard(100.0);
+pub fn background_img(square_size_in_pixel: f32) -> image::RgbImage {
+    let raw_board = rawboard(square_size_in_pixel);
     // If I succeed in implementing GIMP's bump_map later, then I will resurrect this code
     /*
     extern crate cloth_bumpmap;
@@ -21,7 +21,6 @@ pub fn background_img() -> image::RgbImage {
     */
     raw_board
 }
-
 
 fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     /* Numbers based on physical measurements */
