@@ -1,5 +1,28 @@
 extern crate image;
 
+const BNUAK : &'static [u8] = include_bytes!("bnuak.png_80x80.png");
+const BKAUK : &'static [u8] = include_bytes!("bkauk.png_80x80.png");
+const BKAUN : &'static [u8] = include_bytes!("bkaun.png_80x80.png");
+const BMAUN : &'static [u8] = include_bytes!("bmaun.png_80x80.png");
+const BKUA  : &'static [u8] = include_bytes!("bkua.png_80x80.png");
+const BGUA  : &'static [u8] = include_bytes!("bgua.png_80x80.png");
+const BTAM  : &'static [u8] = include_bytes!("btam.png_80x80.png");
+const BTUK  : &'static [u8] = include_bytes!("btuk.png_80x80.png");
+const BDAU  : &'static [u8] = include_bytes!("bdau.png_80x80.png");
+const BIO   : &'static [u8] = include_bytes!("bio.png_80x80.png");
+const BUAI  : &'static [u8] = include_bytes!("buai.png_80x80.png");
+
+const RNUAK : &'static [u8] = include_bytes!("rnuak.png_80x80.png");
+const RKAUK : &'static [u8] = include_bytes!("rkauk.png_80x80.png");
+const RKAUN : &'static [u8] = include_bytes!("rkaun.png_80x80.png");
+const RMAUN : &'static [u8] = include_bytes!("rmaun.png_80x80.png");
+const RKUA  : &'static [u8] = include_bytes!("rkua.png_80x80.png");
+const RGUA  : &'static [u8] = include_bytes!("rgua.png_80x80.png");
+const RTUK  : &'static [u8] = include_bytes!("rtuk.png_80x80.png");
+const RDAU  : &'static [u8] = include_bytes!("rdau.png_80x80.png");
+const RIO   : &'static [u8] = include_bytes!("rio.png_80x80.png");
+const RUAI  : &'static [u8] = include_bytes!("ruai.png_80x80.png");
+
 use rand::distributions::{Distribution, Uniform};
 
 struct Noise {
@@ -206,13 +229,12 @@ fn multiply_pixel(a: image::Rgb<u8>, b: image::Rgb<u8>) -> image::Rgb<u8> {
 
 fn multiply_image(a: &image::RgbImage, b: &image::RgbImage) -> Option<image::RgbImage> {
     let (width, height) = a.dimensions();
-    if b.dimensions() != (width, height) { return None; }
+    if b.dimensions() != (width, height) {
+        return None;
+    }
     let mut c = image::RgbImage::new(width, height);
-    for (x, y, pixel) in c.enumerate_pixels_mut(){
-        *pixel = multiply_pixel(
-            *a.get_pixel(x, y),
-            *b.get_pixel(x, y),
-        )
+    for (x, y, pixel) in c.enumerate_pixels_mut() {
+        *pixel = multiply_pixel(*a.get_pixel(x, y), *b.get_pixel(x, y))
     }
     Some(c)
 }
@@ -239,62 +261,13 @@ fn main() -> Result<(), rand_distr::NormalError> {
 
     let mut i = 0;
     for character in vec![
-        "bnuak.png",
-        "rnuak.png",
-        "bkauk.png",
-        "bkauk.png",
-        "bkauk.png",
-        "bkauk.png",
-        "bkauk.png",
-        "bkauk.png",
-        "bkauk.png",
-        "bkauk.png",
-        "rkauk.png",
-        "rkauk.png",
-        "rkauk.png",
-        "rkauk.png",
-        "rkauk.png",
-        "rkauk.png",
-        "rkauk.png",
-        "rkauk.png",
-        "bgua.png",
-        "bgua.png",
-        "rgua.png",
-        "rgua.png",
-        "bkaun.png",
-        "bkaun.png",
-        "rkaun.png",
-        "rkaun.png",
-        "bdau.png",
-        "bdau.png",
-        "rdau.png",
-        "rdau.png",
-        "bmaun.png",
-        "bmaun.png",
-        "rmaun.png",
-        "rmaun.png",
-        "bkua.png",
-        "bkua.png",
-        "rkua.png",
-        "rkua.png",
-        "btuk.png",
-        "btuk.png",
-        "rtuk.png",
-        "rtuk.png",
-        "buai.png",
-        "buai.png",
-        "ruai.png",
-        "ruai.png",
-        "bio.png",
-        "rio.png",
-        "btam.png",
+        &BNUAK, &RNUAK, &BKAUK, &BKAUK, &BKAUK, &BKAUK, &BKAUK, &BKAUK, &BKAUK, &BKAUK, &RKAUK,
+        &RKAUK, &RKAUK, &RKAUK, &RKAUK, &RKAUK, &RKAUK, &RKAUK, &BGUA, &BGUA, &RGUA, &RGUA, &BKAUN,
+        &BKAUN, &RKAUN, &RKAUN, &BDAU, &BDAU, &RDAU, &RDAU, &BMAUN, &BMAUN, &RMAUN, &RMAUN, &BKUA,
+        &BKUA, &RKUA, &RKUA, &BTUK, &BTUK, &RTUK, &RTUK, &BUAI, &BUAI, &RUAI, &RUAI, &BIO, &RIO,
+        &BTAM,
     ] {
-        let char_image = image::imageops::resize(
-            &image::open(character).unwrap().to_rgb(),
-            80,
-            80,
-            image::imageops::FilterType::CatmullRom
-        );
+        let char_image = image::load_from_memory(character).unwrap().to_rgb();
 
         let res = multiply_image(&char_image, &pieces[i]).unwrap();
         res.save(format!("rawwood_{}.png", i)).unwrap();
