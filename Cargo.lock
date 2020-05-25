@@ -37,19 +37,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 
 [[package]]
-name = "cloth_bumpmap"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "feefd73284200ecd350650142079f8ce33242389f2bb142ecae33cb25f3fcac0"
-dependencies = [
- "fastblur",
- "image",
- "num",
- "rand",
- "rand_distr",
-]
-
-[[package]]
 name = "color_quant"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -425,7 +412,6 @@ dependencies = [
 name = "render_board"
 version = "0.1.0"
 dependencies = [
- "cloth_bumpmap",
  "fastblur",
  "image",
  "num",

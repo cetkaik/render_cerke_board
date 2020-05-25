@@ -1,5 +1,4 @@
 extern crate image;
-extern crate cloth_bumpmap;
 
 fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     /* Numbers based on physical measurements */
@@ -92,11 +91,15 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     return imgbuf;
 }
 
-mod emboss;
-
 fn main() -> Result<(), rand_distr::NormalError> {
     let rawboard = rawboard(100.0);
     rawboard.save("fractal.png").unwrap();
+
+    // If I succeed in implementing GIMP's bump_map later, then I will resurrect this code
+    /*
+    extern crate cloth_bumpmap;
+    [dependencies]
+    cloth_bumpmap = "0.1.1"
     let (width, height) = rawboard.dimensions();
     let bumpmap = cloth_bumpmap::cloth_bumpmap(width, height)?;
 
@@ -110,6 +113,6 @@ fn main() -> Result<(), rand_distr::NormalError> {
     )
     .unwrap();
     clothed.save("clothed.png").unwrap();
-
+    */
     Ok(())
 }
