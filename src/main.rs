@@ -1,5 +1,84 @@
 extern crate image;
 
+use rand::distributions::{Distribution, Uniform};
+
+fn gen_noise(width: usize, height: usize) -> Vec<Vec<f64>> {
+    let between = Uniform::from(0.0..1.0);
+    let mut rng = rand::thread_rng();
+    let mut noise: Vec<Vec<f64>> = Vec::new();
+    for _ in 0..height {
+        let mut vec = Vec::new();
+        for _ in 0..width {
+            vec.push(between.sample(&mut rng));
+        }
+        noise.push(vec);
+    }
+    return noise;
+}
+
+fn smooth_noise(noise: &Vec<Vec<f64>>, x: f64, y: f64, width: usize, height: usize) -> f64 {
+    let fract_x = x.fract();
+    let fract_y = y.fract();
+
+    //wrap around
+    let x1: usize = ((x as usize) + width) % width;
+    let y1: usize = ((y as usize) + height) % height;
+
+    //neighbor values
+    let x2: usize = (x1 + width - 1) % width;
+    let y2: usize = (y1 + height - 1) % height;
+
+    //smooth the noise with bilinear interpolation
+    let mut value = 0.0;
+    value += fract_x * fract_y * noise[y1][x1];
+    value += (1. - fract_x) * fract_y * noise[y1][x2];
+    value += fract_x * (1. - fract_y) * noise[y2][x1];
+    value += (1. - fract_x) * (1. - fract_y) * noise[y2][x2];
+
+    return value;
+}
+
+fn turbulence(noise: &Vec<Vec<f64>>, x: f64, y: f64, initial_size: f64, width: u32, height: u32) -> f64 {
+    /* algorithm taken from https://lodev.org/cgtutor/randomnoise.html#Wood */
+    let mut value = 0.0f64;
+    let mut size = initial_size;
+
+    while size >= 1. {
+        value += smooth_noise(
+            noise,
+            x / size,
+            y / size,
+            width as usize,
+            height as usize,
+        ) * size;
+        size /= 2.0;
+    }
+
+    return 128.0 * value / initial_size;
+}
+
+fn rawwood(width: u32, height: u32) -> image::RgbImage {
+    let mut imgbuf = image::RgbImage::new(width, height);
+
+    let noise = gen_noise(width as usize, height as usize);
+
+    /* algorithm taken from https://lodev.org/cgtutor/randomnoise.html#Wood */
+    let xy_period = 12.0; //number of rings
+    let turb_power = 0.15; //makes twists
+    let turb_size = 32.0; //initial size of the turbulence
+
+    for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
+        let x_value = (x as f64 - width as f64 / 2.) / (width as f64);
+        let y_value = (y as f64 - height as f64 / 2.) / (height as f64);
+        let dist_value = (x_value * x_value + y_value * y_value).sqrt()
+            + turb_power * turbulence(&noise, x as f64, y as f64, turb_size, width, height) / 256.0;
+        let sine_value = 128.0 * ((2. * xy_period * dist_value * 3.14159).sin()).abs();
+        *pixel = image::Rgb([120 + sine_value as u8, 70 + sine_value as u8, 70]);
+    }
+
+    return imgbuf;
+}
+
 fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     /* Numbers based on physical measurements */
     let tak1_color = image::Rgb([193, 193, 193]);
@@ -94,6 +173,9 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
 fn main() -> Result<(), rand_distr::NormalError> {
     let rawboard = rawboard(100.0);
     rawboard.save("fractal.png").unwrap();
+
+    let rawwood = rawwood(80, 80);
+    rawwood.save("rawwood.png").unwrap();
 
     // If I succeed in implementing GIMP's bump_map later, then I will resurrect this code
     /*
