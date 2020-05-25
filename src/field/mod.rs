@@ -39,6 +39,7 @@ pub enum Profession {
     Io,    // King, 王, ales
 }
 
+#[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Side {
     ASide,
     IASide,
@@ -64,6 +65,13 @@ impl Piece {
         match self {
             Piece::NonTam2(pp, _) => pp.image.clone(),
             Piece::Tam2(pt) => pt.image.clone(),
+        }
+    }
+
+    fn physical_side(&self) -> Side {
+        match self {
+            Piece::NonTam2(_, s) => *s,
+            Piece::Tam2(_) => Side::IASide,
         }
     }
 }
@@ -129,6 +137,7 @@ pub struct Field {
     ia_side_hand: Vec<PhysicalPiece>,
     background: image::RgbImage,
     piece_dimension: u32,
+    square_dimension: u32,
 }
 
 mod background;
@@ -149,20 +158,66 @@ fn load_from_80x80(data: &'static [u8], dimension: u32) -> image::RgbImage {
 }
 
 impl Field {
-    pub fn render(&self) -> image::RgbImage {
+    pub fn render(&self, down_side: Side) -> image::RgbImage {
         use crate::image::GenericImage;
         let mut background = self.background.clone();
         let (width, height) = background.dimensions();
 
-        for (x, y, pixel) in self.field[&(Row::O, Column::Z)].image().enumerate_pixels() {
-            background
-                .sub_image(
-                    width / 2 - self.piece_dimension / 2,
-                    height / 2 - self.piece_dimension / 2,
-                    self.piece_dimension,
-                    self.piece_dimension,
-                )
-                .put_pixel(x, y, *pixel);
+        for (row, col) in self.field.keys() {
+            let horiz_offset = (match col {
+                Column::K => -4,
+                Column::L => -3,
+                Column::N => -2,
+                Column::T => -1,
+                Column::Z => 0,
+                Column::X => 1,
+                Column::C => 2,
+                Column::M => 3,
+                Column::P => 4,
+            }) * (match down_side {
+                Side::IASide => 1,
+                Side::ASide => -1,
+            });
+
+            let vert_offset = (match row {
+                Row::A => -4,
+                Row::E => -3,
+                Row::I => -2,
+                Row::U => -1,
+                Row::O => 0,
+                Row::Y => 1,
+                Row::AI => 2,
+                Row::AU => 3,
+                Row::IA => 4,
+            }) * (match down_side {
+                Side::IASide => 1,
+                Side::ASide => -1,
+            });
+
+            let mut sub_image = background.sub_image(
+                ((width / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * horiz_offset) as u32,
+                ((height / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * vert_offset) as u32,
+                self.piece_dimension,
+                self.piece_dimension,
+            );
+
+            for (x, y, pixel) in self.field[&(*row, *col)].image().enumerate_pixels() {
+                sub_image.put_pixel(
+                    if self.field[&(*row, *col)].physical_side() == down_side {
+                        x
+                    } else {
+                        self.piece_dimension - x
+                    },
+                    if self.field[&(*row, *col)].physical_side() == down_side {
+                        y
+                    } else {
+                        self.piece_dimension - y
+                    },
+                    *pixel,
+                );
+            }
         }
 
         background
@@ -181,7 +236,7 @@ impl Field {
             20,
         );
 
-        raw_wood.save("rawwood.png").unwrap();
+        //raw_wood.save("rawwood.png").unwrap();
 
         let mut pieces = Vec::new();
 
@@ -207,7 +262,7 @@ impl Field {
         let tam2_image = load_from_80x80(&BTAM, piece_dimension);
 
         let res = multiply_image(&tam2_image, &pieces[i]).unwrap();
-        res.save(format!("rawwood_{}.png", i)).unwrap();
+        //res.save(format!("rawwood_{}.png", i)).unwrap();
         i += 1;
 
         let physical_tam = PhysicalTam { image: res };
@@ -268,7 +323,7 @@ impl Field {
             let char_image = load_from_80x80(character, piece_dimension);
 
             let res = multiply_image(&char_image, &pieces[i]).unwrap();
-            res.save(format!("rawwood_{}.png", i)).unwrap();
+            // res.save(format!("rawwood_{}.png", i)).unwrap();
 
             hashmap.insert(
                 (row, col),
@@ -295,6 +350,7 @@ impl Field {
             field: hashmap,
             background: background::background_img(piece_dimension as f32 * 1.25),
             piece_dimension,
+            square_dimension: (piece_dimension as f32 * 1.25) as u32,
         };
 
         board

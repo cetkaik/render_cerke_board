@@ -1,4 +1,3 @@
-
 const TAK1: &'static [u8] = include_bytes!("optimum.png");
 
 pub fn background_img(square_size_in_pixel: f32) -> image::RgbImage {
