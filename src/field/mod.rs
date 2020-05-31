@@ -222,16 +222,16 @@ fn get_vert_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
 }
 
 impl Field {
-    fn put_border_on_sub_image(&self, sub_image: &mut image::SubImage<&mut image::RgbImage>){
+    fn put_border_on_sub_image(&self, sub_image: &mut image::SubImage<&mut image::RgbImage>, weight: u32){
         use crate::image::GenericImage;
         for x in 0..self.piece_dimension {
             for y in 0..self.piece_dimension {
-                if x < 9 /* FIXME: not scale invariant */
-                || y < 9
-                || x >= self.piece_dimension - 9
-                || y >= self.piece_dimension - 9
+                if x < weight /* FIXME: not scale invariant */
+                || y < weight
+                || x >= self.piece_dimension - weight
+                || y >= self.piece_dimension - weight
                 {
-                    sub_image.put_pixel(x, y, image::Rgb([255, 0, 255]));
+                    sub_image.put_pixel(x, y, image::Rgb([0xff, 0x1d, 0x62]));
                 }
             }
         }
@@ -431,7 +431,7 @@ impl Field {
                 }
 
                 if Some(i) == self.a_side_focus_index {
-                    self.put_border_on_sub_image(&mut sub_image);
+                    self.put_border_on_sub_image(&mut sub_image, 9);
                 }
 
                 i += 1;
@@ -461,7 +461,7 @@ impl Field {
                 );
 
                 if Some(i) == self.a_side_focus_index {
-                    self.put_border_on_sub_image(&mut sub_image);
+                    self.put_border_on_sub_image(&mut sub_image, 9);
                 }
             }
         }
@@ -507,7 +507,7 @@ impl Field {
                 }
 
                 if Some(i) == self.ia_side_focus_index {
-                    self.put_border_on_sub_image(&mut sub_image);
+                    self.put_border_on_sub_image(&mut sub_image, 9);
                 }
 
                 i += 1;
@@ -537,7 +537,7 @@ impl Field {
                 );
 
                 if Some(i) == self.ia_side_focus_index {
-                    self.put_border_on_sub_image(&mut sub_image);
+                    self.put_border_on_sub_image(&mut sub_image, 9);
                 }
             }
         }
@@ -575,16 +575,63 @@ impl Field {
         for (row, col) in self.focus.keys() {
             let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
             let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
-            let mut sub_image = background.sub_image(
-                ((width / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * horiz_offset) as u32,
-                ((height / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * vert_offset) as u32,
-                self.piece_dimension,
-                self.piece_dimension,
-            );
             if !self.focus[&(*row, *col)] /* not floating */ {
-                self.put_border_on_sub_image(&mut sub_image);
+                let mut sub_image = background.sub_image(
+                    ((width / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * horiz_offset) as u32,
+                    ((height / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * vert_offset) as u32,
+                    self.piece_dimension,
+                    self.piece_dimension,
+                );
+                self.put_border_on_sub_image(&mut sub_image, 9);
+            } else if let Some(((row2, col2), piece)) = &self.floating {
+                // if equal, handle later
+                if (row2, col2) != (&*row, &*col) {
+                    let mut sub_image = background.sub_image(
+                        ((width / 2 - self.piece_dimension / 2) as i32
+                            - (self.square_dimension as i32 - self.piece_dimension as i32) / 2
+                                * if piece.physical_side() == down_side {
+                                    1
+                                } else {
+                                    -1
+                                }
+                            + self.square_dimension as i32 * horiz_offset) as u32,
+                        ((height / 2 - self.piece_dimension / 2) as i32
+                            + (self.square_dimension as i32 - self.piece_dimension as i32) / 2
+                                * if piece.physical_side() == down_side {
+                                    1
+                                } else {
+                                    -1
+                                }
+                            + self.square_dimension as i32 * vert_offset) as u32,
+                        self.piece_dimension,
+                        self.piece_dimension,
+                    );
+                    self.put_border_on_sub_image(&mut sub_image, 6);
+                }
+            } else {
+                let mut sub_image = background.sub_image(
+                    ((width / 2 - self.piece_dimension / 2) as i32
+                        - (self.square_dimension as i32 - self.piece_dimension as i32) / 2
+                            * if Side::IASide == down_side { /* strictly speaking not accurate, but fine */
+                                1
+                            } else {
+                                -1
+                            }
+                        + self.square_dimension as i32 * horiz_offset) as u32,
+                    ((height / 2 - self.piece_dimension / 2) as i32
+                        + (self.square_dimension as i32 - self.piece_dimension as i32) / 2
+                            * if Side::IASide == down_side { /* strictly speaking not accurate, but fine */
+                                1
+                            } else {
+                                -1
+                            }
+                        + self.square_dimension as i32 * vert_offset) as u32,
+                    self.piece_dimension,
+                    self.piece_dimension,
+                );
+                self.put_border_on_sub_image(&mut sub_image, 6);
             }
         }
 
@@ -628,6 +675,10 @@ impl Field {
                     },
                     *pixel,
                 );
+            }
+
+            if self.focus.contains_key(&(*row, *col)) {
+                self.put_border_on_sub_image(&mut sub_image, 9);
             }
         }
 
