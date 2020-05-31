@@ -45,7 +45,7 @@ pub enum Side {
     IASide,
 }
 
-struct PhysicalPiece {
+struct PhysicalNonTam2Piece {
     color: Color,
     profession: Profession,
     image: image::RgbImage,
@@ -56,7 +56,7 @@ struct PhysicalTam {
 }
 
 pub enum Piece {
-    NonTam2(PhysicalPiece, Side),
+    NonTam2(PhysicalNonTam2Piece, Side),
     Tam2(PhysicalTam),
 }
 
@@ -72,6 +72,13 @@ impl Piece {
         match self {
             Piece::NonTam2(_, s) => *s,
             Piece::Tam2(_) => Side::IASide,
+        }
+    }
+
+    fn into_nontam2piece(self) -> Option<(PhysicalNonTam2Piece, Side)> {
+        match self {
+            Piece::NonTam2(p, s) => Some((p, s)),
+            Piece::Tam2(_) => None
         }
     }
 }
@@ -133,8 +140,8 @@ use std::collections::HashMap;
 
 pub struct Field {
     field: HashMap<Coord, Piece>,
-    a_side_hand: Vec<PhysicalPiece>,
-    ia_side_hand: Vec<PhysicalPiece>,
+    a_side_hand: Vec<PhysicalNonTam2Piece>,
+    ia_side_hand: Vec<PhysicalNonTam2Piece>,
     background: image::RgbImage,
     piece_dimension: u32,
     square_dimension: u32,
@@ -157,7 +164,25 @@ fn load_from_80x80(data: &'static [u8], dimension: u32) -> image::RgbImage {
     }
 }
 
+#[derive(Debug)]
+pub enum OperationError {
+    EmptyToHop1Zuo1,
+    Tam2ToHop1Zuo1,
+}
+
 impl Field {
+    pub fn to_opponent_hop1zuo1(&mut self, coord: Coord) -> Result<(), OperationError> {
+        let (piece, side) = self.field.remove(&coord).ok_or(OperationError::EmptyToHop1Zuo1)?
+            .into_nontam2piece().ok_or(OperationError::Tam2ToHop1Zuo1)?;
+
+        if side == Side::ASide {
+            self.ia_side_hand.push(piece);
+        } else {
+            self.a_side_hand.push(piece);
+        }
+        Ok(())
+    }
+
     pub fn render(&self, down_side: Side) -> image::RgbImage {
         use crate::image::GenericImage;
         let mut background = if down_side == Side::IASide {
@@ -166,6 +191,91 @@ impl Field {
             image::imageops::rotate180(&self.background)
         };
         let (width, height) = background.dimensions();
+
+        {
+            let mut i = 0;
+            for p in &self.a_side_hand {
+
+                let vert_offset = (6 + (i / 9)) * (match down_side {
+                    Side::IASide => -1,
+                    Side::ASide => 1,
+                });
+
+                let horiz_offset = (i % 9 - 4) * (match down_side {
+                    Side::IASide => -1,
+                    Side::ASide => 1,
+                });
+
+                let mut sub_image = background.sub_image(
+                    ((width / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * horiz_offset) as u32,
+                    ((height / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * vert_offset) as u32,
+                    self.piece_dimension,
+                    self.piece_dimension,
+                );
+    
+                for (x, y, pixel) in p.image.enumerate_pixels() {
+                    sub_image.put_pixel(
+                        if down_side == Side::ASide {
+                            x
+                        } else {
+                            self.piece_dimension - x
+                        },
+                        if down_side == Side::ASide {
+                            y
+                        } else {
+                            self.piece_dimension - y
+                        },
+                        *pixel,
+                    );
+                }
+
+                i+=1;
+            }
+        }
+        {
+            let mut i = 0;
+            for p in &self.ia_side_hand {
+
+                let vert_offset = (6 + (i / 9)) * (match down_side {
+                    Side::IASide => 1,
+                    Side::ASide => -1,
+                });
+
+                let horiz_offset = (i % 9 - 4) * (match down_side {
+                    Side::IASide => 1,
+                    Side::ASide => -1,
+                });
+
+                let mut sub_image = background.sub_image(
+                    ((width / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * horiz_offset) as u32,
+                    ((height / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * vert_offset) as u32,
+                    self.piece_dimension,
+                    self.piece_dimension,
+                );
+    
+                for (x, y, pixel) in p.image.enumerate_pixels() {
+                    sub_image.put_pixel(
+                        if down_side == Side::IASide {
+                            x
+                        } else {
+                            self.piece_dimension - x
+                        },
+                        if down_side == Side::IASide {
+                            y
+                        } else {
+                            self.piece_dimension - y
+                        },
+                        *pixel,
+                    );
+                }
+
+                i+=1;
+            }
+        }
 
         for (row, col) in self.field.keys() {
             let horiz_offset = (match col {
@@ -332,7 +442,7 @@ impl Field {
             hashmap.insert(
                 (row, col),
                 Piece::NonTam2(
-                    PhysicalPiece {
+                    PhysicalNonTam2Piece {
                         color,
                         profession,
                         image: res,
