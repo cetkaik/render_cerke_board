@@ -153,6 +153,9 @@ pub struct Field {
     piece_dimension: u32,
     square_dimension: u32,
     floating: Option<(Coord, PieceOnField)>,
+    focus: HashMap<Coord, bool /* whether floating */>,
+    a_side_focus_index: Option<usize>,
+    ia_side_focus_index: Option<usize>,
 }
 
 mod background;
@@ -219,6 +222,21 @@ fn get_vert_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
 }
 
 impl Field {
+    fn put_border_on_sub_image(&self, sub_image: &mut image::SubImage<&mut image::RgbImage>){
+        use crate::image::GenericImage;
+        for x in 0..self.piece_dimension {
+            for y in 0..self.piece_dimension {
+                if x < 9 /* FIXME: not scale invariant */
+                || y < 9
+                || x >= self.piece_dimension - 9
+                || y >= self.piece_dimension - 9
+                {
+                    sub_image.put_pixel(x, y, image::Rgb([255, 0, 255]));
+                }
+            }
+        }
+    }
+
     fn debug_assert_49_piece(&self) {
         debug_assert_eq!(
             self.field.len()
@@ -227,6 +245,12 @@ impl Field {
                 + if self.floating.is_some() { 1 } else { 0 },
             49
         );
+    }
+
+    pub fn delete_focus(&mut self) {
+        self.focus = HashMap::new();
+        self.ia_side_focus_index = None;
+        self.a_side_focus_index = None;
     }
 
     pub fn to_opponent_hop1zuo1(&mut self, coord: Coord) -> Result<(), OperationError> {
@@ -248,8 +272,14 @@ impl Field {
             .ok_or(OperationError::Tam2ToHop1Zuo1)?;
 
         if side == Side::ASide {
+            self.delete_focus();
+            self.focus.insert(coord, false);
+            self.ia_side_focus_index = Some(self.ia_side_hand.len());
             self.ia_side_hand.push(nontam2piece);
         } else {
+            self.delete_focus();
+            self.focus.insert(coord, false);
+            self.a_side_focus_index = Some(self.a_side_hand.len());
             self.a_side_hand.push(nontam2piece);
         }
 
@@ -275,25 +305,34 @@ impl Field {
 
         self.field.insert(to, piece);
 
+        self.delete_focus();
+        self.focus.insert(from, false);
+        self.focus.insert(to, false);
+
         self.debug_assert_49_piece();
         Ok(())
     }
 
     pub fn relocate_stepping(&mut self, to: Coord) -> Result<(), OperationError> {
         self.debug_assert_49_piece();
-        let (_coord, piece) = self
+        let (from, piece) = self
             .floating
             .take()
             .ok_or(OperationError::NoPieceOnFlight)?;
 
         self.floating = Some((to, piece));
+
+        self.delete_focus();
+        self.focus.insert(from, true);
+        self.focus.insert(to, true);
+
         self.debug_assert_49_piece();
         Ok(())
     }
 
     pub fn descend_from_stepping(&mut self, to: Coord) -> Result<(), OperationError> {
         self.debug_assert_49_piece();
-        let (_coord, piece) = self
+        let (from, piece) = self
             .floating
             .take()
             .ok_or(OperationError::NoPieceOnFlight)?;
@@ -303,6 +342,10 @@ impl Field {
         }
 
         self.field.insert(to, piece);
+
+        self.delete_focus();
+        self.focus.insert(from, true);
+        self.focus.insert(to, false);
 
         self.debug_assert_49_piece();
         Ok(())
@@ -330,6 +373,10 @@ impl Field {
 
         self.floating = Some((to, piece));
 
+        self.delete_focus();
+        self.focus.insert(from, false);
+        self.focus.insert(to, true);
+
         self.debug_assert_49_piece();
         Ok(())
     }
@@ -344,15 +391,15 @@ impl Field {
         let (width, height) = background.dimensions();
 
         {
-            let mut i = 0;
+            let mut i: usize = 0;
             for p in &self.a_side_hand {
-                let vert_offset = (6 + (i / 9))
+                let vert_offset = (6 + (i / 9)) as i32
                     * (match down_side {
                         Side::IASide => -1,
                         Side::ASide => 1,
                     });
 
-                let horiz_offset = (i % 9 - 4)
+                let horiz_offset = (i % 9 - 4) as i32
                     * (match down_side {
                         Side::IASide => -1,
                         Side::ASide => 1,
@@ -381,21 +428,54 @@ impl Field {
                         },
                         *pixel,
                     );
+                }
+
+                if Some(i) == self.a_side_focus_index {
+                    self.put_border_on_sub_image(&mut sub_image);
                 }
 
                 i += 1;
             }
+
+            /* when placed from hop1 zuo1, the focus_index should be out of bound */
+            {
+                let vert_offset = (6 + (i / 9)) as i32
+                    * (match down_side {
+                        Side::IASide => -1,
+                        Side::ASide => 1,
+                    });
+
+                let horiz_offset = (i % 9 - 4) as i32
+                    * (match down_side {
+                        Side::IASide => -1,
+                        Side::ASide => 1,
+                    });
+
+                let mut sub_image = background.sub_image(
+                    ((width / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * horiz_offset) as u32,
+                    ((height / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * vert_offset) as u32,
+                    self.piece_dimension,
+                    self.piece_dimension,
+                );
+
+                if Some(i) == self.a_side_focus_index {
+                    self.put_border_on_sub_image(&mut sub_image);
+                }
+            }
         }
+
         {
-            let mut i = 0;
+            let mut i: usize = 0;
             for p in &self.ia_side_hand {
-                let vert_offset = (6 + (i / 9))
+                let vert_offset = (6 + (i / 9)) as i32
                     * (match down_side {
                         Side::IASide => 1,
                         Side::ASide => -1,
                     });
 
-                let horiz_offset = (i % 9 - 4)
+                let horiz_offset = (i % 9 - 4) as i32
                     * (match down_side {
                         Side::IASide => 1,
                         Side::ASide => -1,
@@ -426,7 +506,39 @@ impl Field {
                     );
                 }
 
+                if Some(i) == self.ia_side_focus_index {
+                    self.put_border_on_sub_image(&mut sub_image);
+                }
+
                 i += 1;
+            }
+
+            /* when placed from hop1 zuo1, the focus_index should be out of bound */
+            {
+                let vert_offset = (6 + (i / 9)) as i32
+                    * (match down_side {
+                        Side::IASide => 1,
+                        Side::ASide => -1,
+                    });
+
+                let horiz_offset = (i % 9 - 4) as i32
+                    * (match down_side {
+                        Side::IASide => 1,
+                        Side::ASide => -1,
+                    });
+
+                let mut sub_image = background.sub_image(
+                    ((width / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * horiz_offset) as u32,
+                    ((height / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * vert_offset) as u32,
+                    self.piece_dimension,
+                    self.piece_dimension,
+                );
+
+                if Some(i) == self.ia_side_focus_index {
+                    self.put_border_on_sub_image(&mut sub_image);
+                }
             }
         }
 
@@ -459,6 +571,24 @@ impl Field {
                 );
             }
         }
+
+        for (row, col) in self.focus.keys() {
+            let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
+            let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
+            let mut sub_image = background.sub_image(
+                ((width / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * horiz_offset) as u32,
+                ((height / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * vert_offset) as u32,
+                self.piece_dimension,
+                self.piece_dimension,
+            );
+            if !self.focus[&(*row, *col)] /* not floating */ {
+                self.put_border_on_sub_image(&mut sub_image);
+            }
+        }
+
+        
 
         if let Some(((row, col), piece)) = &self.floating {
             let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
@@ -633,6 +763,9 @@ impl Field {
             piece_dimension,
             square_dimension: (piece_dimension as f32 * 1.25) as u32,
             floating: None,
+            focus: HashMap::new(),
+            a_side_focus_index: None,
+            ia_side_focus_index: None,
         };
 
         board
