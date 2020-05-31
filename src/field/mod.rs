@@ -55,7 +55,7 @@ struct PhysicalTam {
     image: image::RgbImage,
 }
 
-pub enum Piece {
+enum Piece {
     NonTam2(PhysicalNonTam2Piece, Side),
     Tam2(PhysicalTam),
 }
