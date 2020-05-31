@@ -55,37 +55,37 @@ struct PhysicalTam {
     image: image::RgbImage,
 }
 
-enum Piece {
+enum PieceOnField {
     NonTam2(PhysicalNonTam2Piece, Side),
     Tam2(PhysicalTam),
 }
 
-impl Piece {
+impl PieceOnField {
     fn image(&self) -> image::RgbImage {
         match self {
-            Piece::NonTam2(pp, _) => pp.image.clone(),
-            Piece::Tam2(pt) => pt.image.clone(),
+            PieceOnField::NonTam2(pp, _) => pp.image.clone(),
+            PieceOnField::Tam2(pt) => pt.image.clone(),
         }
     }
 
     fn physical_side(&self) -> Side {
         match self {
-            Piece::NonTam2(_, s) => *s,
-            Piece::Tam2(_) => Side::IASide,
+            PieceOnField::NonTam2(_, s) => *s,
+            PieceOnField::Tam2(_) => Side::IASide,
         }
     }
 
     fn into_nontam2piece(self) -> Option<(PhysicalNonTam2Piece, Side)> {
         match self {
-            Piece::NonTam2(p, s) => Some((p, s)),
-            Piece::Tam2(_) => None
+            PieceOnField::NonTam2(p, s) => Some((p, s)),
+            PieceOnField::Tam2(_) => None
         }
     }
 
     fn is_tam2(&self) -> bool {
         match self {
-            Piece::NonTam2(_, _) => false,
-            Piece::Tam2(_) => true,
+            PieceOnField::NonTam2(_, _) => false,
+            PieceOnField::Tam2(_) => true,
         }
     }
 }
@@ -146,7 +146,7 @@ type Coord = (Row, Column);
 use std::collections::HashMap;
 
 pub struct Field {
-    field: HashMap<Coord, Piece>,
+    field: HashMap<Coord, PieceOnField>,
     a_side_hand: Vec<PhysicalNonTam2Piece>,
     ia_side_hand: Vec<PhysicalNonTam2Piece>,
     background: image::RgbImage,
@@ -425,7 +425,7 @@ impl Field {
         let physical_tam = PhysicalTam { image: res };
 
         let mut hashmap = HashMap::new();
-        hashmap.insert((Row::O, Column::Z), Piece::Tam2(physical_tam));
+        hashmap.insert((Row::O, Column::Z), PieceOnField::Tam2(physical_tam));
 
         for (character, col, row, profession, color) in vec![
             (&BNUAK, Column::Z, Row::AI, Profession::Nuak1, Color::Huok2),
@@ -484,7 +484,7 @@ impl Field {
 
             hashmap.insert(
                 (row, col),
-                Piece::NonTam2(
+                PieceOnField::NonTam2(
                     PhysicalNonTam2Piece {
                         color,
                         profession,
