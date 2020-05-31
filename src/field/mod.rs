@@ -21,11 +21,13 @@ const RDAU: &'static [u8] = include_bytes!("../rdau.png_80x80.png");
 const RIO: &'static [u8] = include_bytes!("../rio.png_80x80.png");
 const RUAI: &'static [u8] = include_bytes!("../ruai.png_80x80.png");
 
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Color {
     Kok1,  // Red, 赤
     Huok2, // Black, 黒
 }
 
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Profession {
     Nuak1, // Vessel, 船, felkana
     Kauk2, // Pawn, 兵, elmer
@@ -183,6 +185,7 @@ pub enum OperationError {
     Tam2ToHop1Zuo1,
     TwoPiecesOnFlight,
     NoPieceOnFlight,
+    NoMatchingColorOrProfession,
 }
 
 fn get_horiz_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
@@ -222,7 +225,11 @@ fn get_vert_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
 }
 
 impl Field {
-    fn put_border_on_sub_image(&self, sub_image: &mut image::SubImage<&mut image::RgbImage>, weight: u32){
+    fn put_border_on_sub_image(
+        &self,
+        sub_image: &mut image::SubImage<&mut image::RgbImage>,
+        weight: u32,
+    ) {
         use crate::image::GenericImage;
         for x in 0..self.piece_dimension {
             for y in 0..self.piece_dimension {
@@ -251,6 +258,51 @@ impl Field {
         self.focus = HashMap::new();
         self.ia_side_focus_index = None;
         self.a_side_focus_index = None;
+    }
+
+    pub fn from_hop1zuo1(
+        &mut self,
+        coord: Coord,
+        side: Side,
+        color: Color,
+        profession: Profession,
+    ) -> Result<(), OperationError> {
+        self.debug_assert_49_piece();
+
+        if self.field.contains_key(&coord) {
+            return Err(OperationError::MovingToNonEmptySquare);
+        }
+
+        self.delete_focus();
+
+        let nontam2piece = if side == Side::ASide {
+            let ind = self
+                .a_side_hand
+                .iter()
+                .position(|p| p.color == color && p.profession == profession)
+                .ok_or(OperationError::NoMatchingColorOrProfession)?;
+
+            self.a_side_focus_index = Some(self.a_side_hand.len() - 1);
+
+            self.a_side_hand.swap_remove(ind)
+        } else {
+            let ind = self
+                .ia_side_hand
+                .iter()
+                .position(|p| p.color == color && p.profession == profession)
+                .ok_or(OperationError::NoMatchingColorOrProfession)?;
+
+            self.ia_side_focus_index = Some(self.ia_side_hand.len() - 1);
+
+            self.ia_side_hand.swap_remove(ind)
+        };
+
+        self.field
+            .insert(coord, PieceOnField::NonTam2(nontam2piece, side));
+        self.focus.insert(coord, false);
+
+        self.debug_assert_49_piece();
+        Ok(())
     }
 
     pub fn to_opponent_hop1zuo1(&mut self, coord: Coord) -> Result<(), OperationError> {
@@ -575,7 +627,9 @@ impl Field {
         for (row, col) in self.focus.keys() {
             let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
             let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
-            if !self.focus[&(*row, *col)] /* not floating */ {
+            if !self.focus[&(*row, *col)]
+            /* not floating */
+            {
                 let mut sub_image = background.sub_image(
                     ((width / 2 - self.piece_dimension / 2) as i32
                         + self.square_dimension as i32 * horiz_offset) as u32,
@@ -596,7 +650,8 @@ impl Field {
                                 } else {
                                     -1
                                 }
-                            + self.square_dimension as i32 * horiz_offset) as u32,
+                            + self.square_dimension as i32 * horiz_offset)
+                            as u32,
                         ((height / 2 - self.piece_dimension / 2) as i32
                             + (self.square_dimension as i32 - self.piece_dimension as i32) / 2
                                 * if piece.physical_side() == down_side {
@@ -604,7 +659,8 @@ impl Field {
                                 } else {
                                     -1
                                 }
-                            + self.square_dimension as i32 * vert_offset) as u32,
+                            + self.square_dimension as i32 * vert_offset)
+                            as u32,
                         self.piece_dimension,
                         self.piece_dimension,
                     );
@@ -614,7 +670,8 @@ impl Field {
                 let mut sub_image = background.sub_image(
                     ((width / 2 - self.piece_dimension / 2) as i32
                         - (self.square_dimension as i32 - self.piece_dimension as i32) / 2
-                            * if Side::IASide == down_side { /* strictly speaking not accurate, but fine */
+                            * if Side::IASide == down_side {
+                                /* strictly speaking not accurate, but fine */
                                 1
                             } else {
                                 -1
@@ -622,7 +679,8 @@ impl Field {
                         + self.square_dimension as i32 * horiz_offset) as u32,
                     ((height / 2 - self.piece_dimension / 2) as i32
                         + (self.square_dimension as i32 - self.piece_dimension as i32) / 2
-                            * if Side::IASide == down_side { /* strictly speaking not accurate, but fine */
+                            * if Side::IASide == down_side {
+                                /* strictly speaking not accurate, but fine */
                                 1
                             } else {
                                 -1
@@ -634,8 +692,6 @@ impl Field {
                 self.put_border_on_sub_image(&mut sub_image, 6);
             }
         }
-
-        
 
         if let Some(((row, col), piece)) = &self.floating {
             let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);

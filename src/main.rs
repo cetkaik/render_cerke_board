@@ -38,5 +38,17 @@ fn main() -> Result<(), rand_distr::NormalError> {
     field.render(field::Side::IASide).save("a6.png").unwrap();
     field.render(field::Side::ASide).save("b6.png").unwrap();
 
+    field
+        .from_hop1zuo1(
+            (Row::O, Column::M),
+            field::Side::IASide,
+            field::Color::Huok2,
+            field::Profession::Kua2,
+        )
+        .unwrap();
+
+    field.render(field::Side::IASide).save("a7.png").unwrap();
+    field.render(field::Side::ASide).save("b7.png").unwrap();
+
     Ok(())
 }
