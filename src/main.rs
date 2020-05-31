@@ -28,5 +28,17 @@ fn main() -> Result<(), rand_distr::NormalError> {
     field.render(field::Side::IASide).save("a4.png").unwrap();
     field.render(field::Side::ASide).save("b4.png").unwrap();
 
+    field
+        .relocate_stepping((Row::O, Column::Z))
+        .unwrap();
+
+    field.render(field::Side::IASide).save("a5.png").unwrap();
+    field.render(field::Side::ASide).save("b5.png").unwrap();
+
+    field.descend_from_stepping((Row::O, Column::C)).unwrap();
+
+    field.render(field::Side::IASide).save("a6.png").unwrap();
+    field.render(field::Side::ASide).save("b6.png").unwrap();
+
     Ok(())
 }

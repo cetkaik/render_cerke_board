@@ -179,6 +179,7 @@ pub enum OperationError {
     SteppingOnEmptySquare,
     Tam2ToHop1Zuo1,
     TwoPiecesOnFlight,
+    NoPieceOnFlight,
 }
 
 fn get_horiz_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
@@ -271,6 +272,35 @@ impl Field {
             .field
             .remove(&from)
             .ok_or(OperationError::MovingFromEmptySquare)?;
+
+        self.field.insert(to, piece);
+
+        self.debug_assert_49_piece();
+        Ok(())
+    }
+
+    pub fn relocate_stepping(&mut self, to: Coord) -> Result<(), OperationError> {
+        self.debug_assert_49_piece();
+        let (_coord, piece) = self
+            .floating
+            .take()
+            .ok_or(OperationError::NoPieceOnFlight)?;
+
+        self.floating = Some((to, piece));
+        self.debug_assert_49_piece();
+        Ok(())
+    }
+
+    pub fn descend_from_stepping(&mut self, to: Coord) -> Result<(), OperationError> {
+        self.debug_assert_49_piece();
+        let (_coord, piece) = self
+            .floating
+            .take()
+            .ok_or(OperationError::NoPieceOnFlight)?;
+
+        if self.field.contains_key(&to) {
+            return Err(OperationError::MovingToNonEmptySquare);
+        }
 
         self.field.insert(to, piece);
 
