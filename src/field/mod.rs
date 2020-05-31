@@ -160,7 +160,11 @@ fn load_from_80x80(data: &'static [u8], dimension: u32) -> image::RgbImage {
 impl Field {
     pub fn render(&self, down_side: Side) -> image::RgbImage {
         use crate::image::GenericImage;
-        let mut background = self.background.clone();
+        let mut background = if down_side == Side::IASide {
+            self.background.clone()
+        } else {
+            image::imageops::rotate180(&self.background)
+        };
         let (width, height) = background.dimensions();
 
         for (row, col) in self.field.keys() {
