@@ -173,28 +173,56 @@ fn load_from_80x80(data: &'static [u8], dimension: u32) -> image::RgbImage {
 
 #[derive(Debug)]
 pub enum OperationError {
-    EmptyToHop1Zuo1,
+    MovingFromEmptySquare,
+    MovingToNonEmptySquare,
     Tam2ToHop1Zuo1,
 }
 
 impl Field {
+    fn debug_assert_49_piece(&self) {
+        debug_assert_eq!(self.field.len() + self.a_side_hand.len() + self.ia_side_hand.len(), 49);
+    }
+
     pub fn to_opponent_hop1zuo1(&mut self, coord: Coord) -> Result<(), OperationError> {
+        self.debug_assert_49_piece();
+
         if !self.field.contains_key(&coord) {
-            return Err(OperationError::EmptyToHop1Zuo1);
+            return Err(OperationError::MovingFromEmptySquare);
         }
 
         if self.field[&coord].is_tam2() {
             return Err(OperationError::Tam2ToHop1Zuo1);
         }
 
-        let (piece, side) = self.field.remove(&coord).ok_or(OperationError::EmptyToHop1Zuo1)?
+        let (nontam2piece, side) = self.field.remove(&coord).ok_or(OperationError::MovingFromEmptySquare)?
             .into_nontam2piece().ok_or(OperationError::Tam2ToHop1Zuo1)?;
 
         if side == Side::ASide {
-            self.ia_side_hand.push(piece);
+            self.ia_side_hand.push(nontam2piece);
         } else {
-            self.a_side_hand.push(piece);
+            self.a_side_hand.push(nontam2piece);
         }
+
+        self.debug_assert_49_piece();
+        Ok(())
+    }
+
+    pub fn to_empty_square(&mut self, to: Coord, from: Coord) -> Result<(), OperationError> {
+        self.debug_assert_49_piece();
+
+        if !self.field.contains_key(&from) {
+            return Err(OperationError::MovingFromEmptySquare);
+        }
+
+        if self.field.contains_key(&to) {
+            return Err(OperationError::MovingToNonEmptySquare);
+        }
+
+        let piece = self.field.remove(&from).ok_or(OperationError::MovingFromEmptySquare)?;
+
+        self.field.insert(to, piece);
+
+        self.debug_assert_49_piece();
         Ok(())
     }
 

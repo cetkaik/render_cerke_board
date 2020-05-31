@@ -14,5 +14,10 @@ fn main() -> Result<(), rand_distr::NormalError> {
     field.render(field::Side::IASide).save("a2.png").unwrap();
     field.render(field::Side::ASide).save("b2.png").unwrap();
 
+    field.to_empty_square((Row::A, Column::K), (Row::A, Column::L)).unwrap();
+
+    field.render(field::Side::IASide).save("a3.png").unwrap();
+    field.render(field::Side::ASide).save("b3.png").unwrap();
+
     Ok(())
 }
