@@ -78,7 +78,7 @@ impl PieceOnField {
     fn into_nontam2piece(self) -> Option<(PhysicalNonTam2Piece, Side)> {
         match self {
             PieceOnField::NonTam2(p, s) => Some((p, s)),
-            PieceOnField::Tam2(_) => None
+            PieceOnField::Tam2(_) => None,
         }
     }
 
@@ -152,6 +152,7 @@ pub struct Field {
     background: image::RgbImage,
     piece_dimension: u32,
     square_dimension: u32,
+    floating: Option<(Coord, PieceOnField)>,
 }
 
 mod background;
@@ -175,12 +176,56 @@ fn load_from_80x80(data: &'static [u8], dimension: u32) -> image::RgbImage {
 pub enum OperationError {
     MovingFromEmptySquare,
     MovingToNonEmptySquare,
+    SteppingOnEmptySquare,
     Tam2ToHop1Zuo1,
+    TwoPiecesOnFlight,
+}
+
+fn get_horiz_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
+    let (_, col) = coord;
+    (match col {
+        Column::K => -4,
+        Column::L => -3,
+        Column::N => -2,
+        Column::T => -1,
+        Column::Z => 0,
+        Column::X => 1,
+        Column::C => 2,
+        Column::M => 3,
+        Column::P => 4,
+    }) * (match down_side {
+        Side::IASide => 1,
+        Side::ASide => -1,
+    })
+}
+
+fn get_vert_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
+    let (row, _) = coord;
+    (match row {
+        Row::A => -4,
+        Row::E => -3,
+        Row::I => -2,
+        Row::U => -1,
+        Row::O => 0,
+        Row::Y => 1,
+        Row::AI => 2,
+        Row::AU => 3,
+        Row::IA => 4,
+    }) * (match down_side {
+        Side::IASide => 1,
+        Side::ASide => -1,
+    })
 }
 
 impl Field {
     fn debug_assert_49_piece(&self) {
-        debug_assert_eq!(self.field.len() + self.a_side_hand.len() + self.ia_side_hand.len(), 49);
+        debug_assert_eq!(
+            self.field.len()
+                + self.a_side_hand.len()
+                + self.ia_side_hand.len()
+                + if self.floating.is_some() { 1 } else { 0 },
+            49
+        );
     }
 
     pub fn to_opponent_hop1zuo1(&mut self, coord: Coord) -> Result<(), OperationError> {
@@ -194,8 +239,12 @@ impl Field {
             return Err(OperationError::Tam2ToHop1Zuo1);
         }
 
-        let (nontam2piece, side) = self.field.remove(&coord).ok_or(OperationError::MovingFromEmptySquare)?
-            .into_nontam2piece().ok_or(OperationError::Tam2ToHop1Zuo1)?;
+        let (nontam2piece, side) = self
+            .field
+            .remove(&coord)
+            .ok_or(OperationError::MovingFromEmptySquare)?
+            .into_nontam2piece()
+            .ok_or(OperationError::Tam2ToHop1Zuo1)?;
 
         if side == Side::ASide {
             self.ia_side_hand.push(nontam2piece);
@@ -218,9 +267,38 @@ impl Field {
             return Err(OperationError::MovingToNonEmptySquare);
         }
 
-        let piece = self.field.remove(&from).ok_or(OperationError::MovingFromEmptySquare)?;
+        let piece = self
+            .field
+            .remove(&from)
+            .ok_or(OperationError::MovingFromEmptySquare)?;
 
         self.field.insert(to, piece);
+
+        self.debug_assert_49_piece();
+        Ok(())
+    }
+
+    pub fn step_on_occupied(&mut self, to: Coord, from: Coord) -> Result<(), OperationError> {
+        self.debug_assert_49_piece();
+
+        if !self.field.contains_key(&from) {
+            return Err(OperationError::MovingFromEmptySquare);
+        }
+
+        if !self.field.contains_key(&to) {
+            return Err(OperationError::SteppingOnEmptySquare);
+        }
+
+        if self.floating.is_some() {
+            return Err(OperationError::TwoPiecesOnFlight);
+        }
+
+        let piece = self
+            .field
+            .remove(&from)
+            .ok_or(OperationError::MovingFromEmptySquare)?;
+
+        self.floating = Some((to, piece));
 
         self.debug_assert_49_piece();
         Ok(())
@@ -238,16 +316,17 @@ impl Field {
         {
             let mut i = 0;
             for p in &self.a_side_hand {
+                let vert_offset = (6 + (i / 9))
+                    * (match down_side {
+                        Side::IASide => -1,
+                        Side::ASide => 1,
+                    });
 
-                let vert_offset = (6 + (i / 9)) * (match down_side {
-                    Side::IASide => -1,
-                    Side::ASide => 1,
-                });
-
-                let horiz_offset = (i % 9 - 4) * (match down_side {
-                    Side::IASide => -1,
-                    Side::ASide => 1,
-                });
+                let horiz_offset = (i % 9 - 4)
+                    * (match down_side {
+                        Side::IASide => -1,
+                        Side::ASide => 1,
+                    });
 
                 let mut sub_image = background.sub_image(
                     ((width / 2 - self.piece_dimension / 2) as i32
@@ -257,7 +336,7 @@ impl Field {
                     self.piece_dimension,
                     self.piece_dimension,
                 );
-    
+
                 for (x, y, pixel) in p.image.enumerate_pixels() {
                     sub_image.put_pixel(
                         if down_side == Side::ASide {
@@ -274,22 +353,23 @@ impl Field {
                     );
                 }
 
-                i+=1;
+                i += 1;
             }
         }
         {
             let mut i = 0;
             for p in &self.ia_side_hand {
+                let vert_offset = (6 + (i / 9))
+                    * (match down_side {
+                        Side::IASide => 1,
+                        Side::ASide => -1,
+                    });
 
-                let vert_offset = (6 + (i / 9)) * (match down_side {
-                    Side::IASide => 1,
-                    Side::ASide => -1,
-                });
-
-                let horiz_offset = (i % 9 - 4) * (match down_side {
-                    Side::IASide => 1,
-                    Side::ASide => -1,
-                });
+                let horiz_offset = (i % 9 - 4)
+                    * (match down_side {
+                        Side::IASide => 1,
+                        Side::ASide => -1,
+                    });
 
                 let mut sub_image = background.sub_image(
                     ((width / 2 - self.piece_dimension / 2) as i32
@@ -299,7 +379,7 @@ impl Field {
                     self.piece_dimension,
                     self.piece_dimension,
                 );
-    
+
                 for (x, y, pixel) in p.image.enumerate_pixels() {
                     sub_image.put_pixel(
                         if down_side == Side::IASide {
@@ -316,40 +396,13 @@ impl Field {
                     );
                 }
 
-                i+=1;
+                i += 1;
             }
         }
 
         for (row, col) in self.field.keys() {
-            let horiz_offset = (match col {
-                Column::K => -4,
-                Column::L => -3,
-                Column::N => -2,
-                Column::T => -1,
-                Column::Z => 0,
-                Column::X => 1,
-                Column::C => 2,
-                Column::M => 3,
-                Column::P => 4,
-            }) * (match down_side {
-                Side::IASide => 1,
-                Side::ASide => -1,
-            });
-
-            let vert_offset = (match row {
-                Row::A => -4,
-                Row::E => -3,
-                Row::I => -2,
-                Row::U => -1,
-                Row::O => 0,
-                Row::Y => 1,
-                Row::AI => 2,
-                Row::AU => 3,
-                Row::IA => 4,
-            }) * (match down_side {
-                Side::IASide => 1,
-                Side::ASide => -1,
-            });
+            let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
+            let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
 
             let mut sub_image = background.sub_image(
                 ((width / 2 - self.piece_dimension / 2) as i32
@@ -368,6 +421,47 @@ impl Field {
                         self.piece_dimension - x
                     },
                     if self.field[&(*row, *col)].physical_side() == down_side {
+                        y
+                    } else {
+                        self.piece_dimension - y
+                    },
+                    *pixel,
+                );
+            }
+        }
+
+        if let Some(((row, col), piece)) = &self.floating {
+            let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
+            let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
+            let mut sub_image = background.sub_image(
+                ((width / 2 - self.piece_dimension / 2) as i32
+                    - (self.square_dimension as i32 - self.piece_dimension as i32) / 2
+                        * if piece.physical_side() == down_side {
+                            1
+                        } else {
+                            -1
+                        }
+                    + self.square_dimension as i32 * horiz_offset) as u32,
+                ((height / 2 - self.piece_dimension / 2) as i32
+                    + (self.square_dimension as i32 - self.piece_dimension as i32) / 2
+                        * if piece.physical_side() == down_side {
+                            1
+                        } else {
+                            -1
+                        }
+                    + self.square_dimension as i32 * vert_offset) as u32,
+                self.piece_dimension,
+                self.piece_dimension,
+            );
+
+            for (x, y, pixel) in piece.image().enumerate_pixels() {
+                sub_image.put_pixel(
+                    if piece.physical_side() == down_side {
+                        x
+                    } else {
+                        self.piece_dimension - x
+                    },
+                    if piece.physical_side() == down_side {
                         y
                     } else {
                         self.piece_dimension - y
@@ -508,6 +602,7 @@ impl Field {
             background: background::background_img(piece_dimension as f32 * 1.25),
             piece_dimension,
             square_dimension: (piece_dimension as f32 * 1.25) as u32,
+            floating: None,
         };
 
         board
