@@ -81,6 +81,13 @@ impl Piece {
             Piece::Tam2(_) => None
         }
     }
+
+    fn is_tam2(&self) -> bool {
+        match self {
+            Piece::NonTam2(_, _) => false,
+            Piece::Tam2(_) => true,
+        }
+    }
 }
 
 fn multiply_channel(a: u8, b: u8) -> u8 {
@@ -172,6 +179,14 @@ pub enum OperationError {
 
 impl Field {
     pub fn to_opponent_hop1zuo1(&mut self, coord: Coord) -> Result<(), OperationError> {
+        if !self.field.contains_key(&coord) {
+            return Err(OperationError::EmptyToHop1Zuo1);
+        }
+
+        if self.field[&coord].is_tam2() {
+            return Err(OperationError::Tam2ToHop1Zuo1);
+        }
+
         let (piece, side) = self.field.remove(&coord).ok_or(OperationError::EmptyToHop1Zuo1)?
             .into_nontam2piece().ok_or(OperationError::Tam2ToHop1Zuo1)?;
 
