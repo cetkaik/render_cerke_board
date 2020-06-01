@@ -1,5 +1,5 @@
 [package]
-name = "render_board"
+name = "render_cerke_board"
 version = "0.1.0"
 authors = ["jekto_vatimeliju <jekto.vatimeliju@gmail.com>"]
 edition = "2018"

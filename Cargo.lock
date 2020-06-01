@@ -409,7 +409,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "render_board"
+name = "render_cerke_board"
 version = "0.1.0"
 dependencies = [
  "fastblur",
