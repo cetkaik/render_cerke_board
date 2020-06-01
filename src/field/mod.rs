@@ -451,7 +451,7 @@ impl Field {
                         Side::ASide => 1,
                     });
 
-                let horiz_offset = (i % 9 - 4) as i32
+                let horiz_offset = ((i % 9) as i32 - 4)
                     * (match down_side {
                         Side::IASide => -1,
                         Side::ASide => 1,
@@ -497,7 +497,7 @@ impl Field {
                         Side::ASide => 1,
                     });
 
-                let horiz_offset = (i % 9 - 4) as i32
+                let horiz_offset = ((i % 9) as i32 - 4) 
                     * (match down_side {
                         Side::IASide => -1,
                         Side::ASide => 1,
@@ -527,7 +527,7 @@ impl Field {
                         Side::ASide => -1,
                     });
 
-                let horiz_offset = (i % 9 - 4) as i32
+                let horiz_offset = ((i % 9) as i32 - 4)
                     * (match down_side {
                         Side::IASide => 1,
                         Side::ASide => -1,
@@ -573,7 +573,7 @@ impl Field {
                         Side::ASide => -1,
                     });
 
-                let horiz_offset = (i % 9 - 4) as i32
+                let horiz_offset = ((i % 9) as i32 - 4)
                     * (match down_side {
                         Side::IASide => 1,
                         Side::ASide => -1,
