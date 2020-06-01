@@ -79,22 +79,44 @@ const RUAI: &'static [u8] = include_bytes!("ruai.png_80x80.png");
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Color {
-    Kok1,  // Red, 赤
-    Huok2, // Black, 黒
+    /// Red, 赤
+    Kok1,  
+
+    /// Black, 黒
+    Huok2, 
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Profession {
-    Nuak1, // Vessel, 船, felkana
-    Kauk2, // Pawn, 兵, elmer
-    Gua2,  // Rook, 弓, gustuer
-    Kaun1, // Bishop, 車, vadyrd
-    Dau2,  // Tiger, 虎, stistyst
-    Maun1, // Horse, 馬, dodor
-    Kua2,  // Clerk, 筆, kua
-    Tuk2,  // Shaman, 巫, terlsk
-    Uai1,  // General, 将, varxle
-    Io,    // King, 王, ales
+    /// Vessel, 船, felkana
+    Nuak1, 
+    
+    /// Pawn, 兵, elmer
+    Kauk2, 
+    
+    /// Rook, 弓, gustuer
+    Gua2,  
+    
+    /// Bishop, 車, vadyrd
+    Kaun1, 
+    
+    /// Tiger, 虎, stistyst
+    Dau2,  
+    
+    /// Horse, 馬, dodor
+    Maun1, 
+    
+    /// Clerk, 筆, kua
+    Kua2,  
+    
+    /// Shaman, 巫, terlsk
+    Tuk2,  
+    
+    /// General, 将, varxle
+    Uai1,  
+    
+    /// King, 王, ales
+    Io,    
 }
 
 #[derive(Eq, PartialEq, Clone, Copy)]
