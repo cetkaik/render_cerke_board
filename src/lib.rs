@@ -1,8 +1,12 @@
 extern crate image;
 
-mod field;
+pub mod field;
 
-fn main() -> Result<(), rand_distr::NormalError> {
+#[cfg(test)]
+mod tests {
+    #[test]
+fn test() {
+    use super::*;
     use field::Column;
     use field::Row;
     let mut field = field::Field::new();
@@ -50,5 +54,5 @@ fn main() -> Result<(), rand_distr::NormalError> {
     field.render(field::Side::IASide).save("a7.png").unwrap();
     field.render(field::Side::ASide).save("b7.png").unwrap();
 
-    Ok(())
+}
 }
