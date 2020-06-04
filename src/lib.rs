@@ -1,122 +1,120 @@
 extern crate image;
 
-
 #[cfg(test)]
 mod tests {
     #[test]
-fn test() {
-    use super::*;
-    let mut field = Field::new();
-    field.render(Side::IASide).save("a.png").unwrap();
-    field.render(Side::ASide).save("b.png").unwrap();
+    fn test() {
+        use super::*;
+        let mut field = Field::new();
+        field.render(Side::IASide).save("a.png").unwrap();
+        field.render(Side::ASide).save("b.png").unwrap();
 
-    field.to_opponent_hop1zuo1((Row::A, Column::K)).unwrap();
+        field.move_to_opponent_hop1zuo1((Row::A, Column::K)).unwrap();
 
-    field.render(Side::IASide).save("a2.png").unwrap();
-    field.render(Side::ASide).save("b2.png").unwrap();
+        field.render(Side::IASide).save("a2.png").unwrap();
+        field.render(Side::ASide).save("b2.png").unwrap();
 
-    field
-        .to_empty_square((Row::A, Column::K), (Row::A, Column::L))
-        .unwrap();
+        field
+            .move_to_empty_square((Row::A, Column::K), (Row::A, Column::L))
+            .unwrap();
 
-    field.render(Side::IASide).save("a3.png").unwrap();
-    field.render(Side::ASide).save("b3.png").unwrap();
+        field.render(Side::IASide).save("a3.png").unwrap();
+        field.render(Side::ASide).save("b3.png").unwrap();
 
-    field
-        .step_on_occupied((Row::A, Column::P), (Row::A, Column::M))
-        .unwrap();
+        field
+            .step_on_occupied((Row::A, Column::P), (Row::A, Column::M))
+            .unwrap();
 
-    field.render(Side::IASide).save("a4.png").unwrap();
-    field.render(Side::ASide).save("b4.png").unwrap();
+        field.render(Side::IASide).save("a4.png").unwrap();
+        field.render(Side::ASide).save("b4.png").unwrap();
 
-    field.relocate_stepping((Row::O, Column::Z)).unwrap();
+        field.relocate_stepping((Row::O, Column::Z)).unwrap();
 
-    field.render(Side::IASide).save("a5.png").unwrap();
-    field.render(Side::ASide).save("b5.png").unwrap();
+        field.render(Side::IASide).save("a5.png").unwrap();
+        field.render(Side::ASide).save("b5.png").unwrap();
 
-    field.descend_from_stepping((Row::O, Column::C)).unwrap();
+        field.descend_from_stepping((Row::O, Column::C)).unwrap();
 
-    field.render(Side::IASide).save("a6.png").unwrap();
-    field.render(Side::ASide).save("b6.png").unwrap();
+        field.render(Side::IASide).save("a6.png").unwrap();
+        field.render(Side::ASide).save("b6.png").unwrap();
 
-    field
-        .from_hop1zuo1(
-            (Row::O, Column::M),
-            Side::IASide,
-            Color::Huok2,
-            Profession::Kua2,
-        )
-        .unwrap();
+        field
+            .from_hop1zuo1(
+                (Row::O, Column::M),
+                Side::IASide,
+                Color::Huok2,
+                Profession::Kua2,
+            )
+            .unwrap();
 
-    field.render(Side::IASide).save("a7.png").unwrap();
-    field.render(Side::ASide).save("b7.png").unwrap();
-
+        field.render(Side::IASide).save("a7.png").unwrap();
+        field.render(Side::ASide).save("b7.png").unwrap();
+    }
 }
-}
 
-const BNUAK: &'static [u8] = include_bytes!("bnuak.png_80x80.png");
-const BKAUK: &'static [u8] = include_bytes!("bkauk.png_80x80.png");
-const BKAUN: &'static [u8] = include_bytes!("bkaun.png_80x80.png");
-const BMAUN: &'static [u8] = include_bytes!("bmaun.png_80x80.png");
-const BKUA: &'static [u8] = include_bytes!("bkua.png_80x80.png");
-const BGUA: &'static [u8] = include_bytes!("bgua.png_80x80.png");
-const BTAM: &'static [u8] = include_bytes!("btam.png_80x80.png");
-const BTUK: &'static [u8] = include_bytes!("btuk.png_80x80.png");
-const BDAU: &'static [u8] = include_bytes!("bdau.png_80x80.png");
-const BIO: &'static [u8] = include_bytes!("bio.png_80x80.png");
-const BUAI: &'static [u8] = include_bytes!("buai.png_80x80.png");
+const BNUAK: &[u8] = include_bytes!("bnuak.png_80x80.png");
+const BKAUK: &[u8] = include_bytes!("bkauk.png_80x80.png");
+const BKAUN: &[u8] = include_bytes!("bkaun.png_80x80.png");
+const BMAUN: &[u8] = include_bytes!("bmaun.png_80x80.png");
+const BKUA: &[u8] = include_bytes!("bkua.png_80x80.png");
+const BGUA: &[u8] = include_bytes!("bgua.png_80x80.png");
+const BTAM: &[u8] = include_bytes!("btam.png_80x80.png");
+const BTUK: &[u8] = include_bytes!("btuk.png_80x80.png");
+const BDAU: &[u8] = include_bytes!("bdau.png_80x80.png");
+const BIO: &[u8] = include_bytes!("bio.png_80x80.png");
+const BUAI: &[u8] = include_bytes!("buai.png_80x80.png");
 
-const RNUAK: &'static [u8] = include_bytes!("rnuak.png_80x80.png");
-const RKAUK: &'static [u8] = include_bytes!("rkauk.png_80x80.png");
-const RKAUN: &'static [u8] = include_bytes!("rkaun.png_80x80.png");
-const RMAUN: &'static [u8] = include_bytes!("rmaun.png_80x80.png");
-const RKUA: &'static [u8] = include_bytes!("rkua.png_80x80.png");
-const RGUA: &'static [u8] = include_bytes!("rgua.png_80x80.png");
-const RTUK: &'static [u8] = include_bytes!("rtuk.png_80x80.png");
-const RDAU: &'static [u8] = include_bytes!("rdau.png_80x80.png");
-const RIO: &'static [u8] = include_bytes!("rio.png_80x80.png");
-const RUAI: &'static [u8] = include_bytes!("ruai.png_80x80.png");
+const RNUAK: &[u8] = include_bytes!("rnuak.png_80x80.png");
+const RKAUK: &[u8] = include_bytes!("rkauk.png_80x80.png");
+const RKAUN: &[u8] = include_bytes!("rkaun.png_80x80.png");
+const RMAUN: &[u8] = include_bytes!("rmaun.png_80x80.png");
+const RKUA: &[u8] = include_bytes!("rkua.png_80x80.png");
+const RGUA: &[u8] = include_bytes!("rgua.png_80x80.png");
+const RTUK: &[u8] = include_bytes!("rtuk.png_80x80.png");
+const RDAU: &[u8] = include_bytes!("rdau.png_80x80.png");
+const RIO: &[u8] = include_bytes!("rio.png_80x80.png");
+const RUAI: &[u8] = include_bytes!("ruai.png_80x80.png");
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Color {
     /// Red, 赤
-    Kok1,  
+    Kok1,
 
     /// Black, 黒
-    Huok2, 
+    Huok2,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Profession {
     /// Vessel, 船, felkana
-    Nuak1, 
-    
+    Nuak1,
+
     /// Pawn, 兵, elmer
-    Kauk2, 
-    
+    Kauk2,
+
     /// Rook, 弓, gustuer
-    Gua2,  
-    
+    Gua2,
+
     /// Bishop, 車, vadyrd
-    Kaun1, 
-    
+    Kaun1,
+
     /// Tiger, 虎, stistyst
-    Dau2,  
-    
+    Dau2,
+
     /// Horse, 馬, dodor
-    Maun1, 
-    
+    Maun1,
+
     /// Clerk, 筆, kua
-    Kua2,  
-    
+    Kua2,
+
     /// Shaman, 巫, terlsk
-    Tuk2,  
-    
+    Tuk2,
+
     /// General, 将, varxle
-    Uai1,  
-    
+    Uai1,
+
     /// King, 王, ales
-    Io,    
+    Io,
 }
 
 #[derive(Eq, PartialEq, Clone, Copy)]
@@ -302,6 +300,12 @@ fn get_vert_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
     })
 }
 
+impl Default for Field {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Field {
     fn put_border_on_sub_image(
         &self,
@@ -383,7 +387,7 @@ impl Field {
         Ok(())
     }
 
-    pub fn to_opponent_hop1zuo1(&mut self, coord: Coord) -> Result<(), OperationError> {
+    pub fn move_to_opponent_hop1zuo1(&mut self, coord: Coord) -> Result<(), OperationError> {
         self.debug_assert_49_piece();
 
         if !self.field.contains_key(&coord) {
@@ -417,7 +421,7 @@ impl Field {
         Ok(())
     }
 
-    pub fn to_empty_square(&mut self, to: Coord, from: Coord) -> Result<(), OperationError> {
+    pub fn move_to_empty_square(&mut self, to: Coord, from: Coord) -> Result<(), OperationError> {
         self.debug_assert_49_piece();
 
         if !self.field.contains_key(&from) {
@@ -575,7 +579,7 @@ impl Field {
                         Side::ASide => 1,
                     });
 
-                let horiz_offset = ((i % 9) as i32 - 4) 
+                let horiz_offset = ((i % 9) as i32 - 4)
                     * (match down_side {
                         Side::IASide => -1,
                         Side::ASide => 1,
@@ -940,7 +944,7 @@ impl Field {
             i += 1;
         }
 
-        let board = Field {
+        Field {
             a_side_hand: Vec::new(),
             ia_side_hand: Vec::new(),
             field: hashmap,
@@ -951,8 +955,6 @@ impl Field {
             focus: HashMap::new(),
             a_side_focus_index: None,
             ia_side_focus_index: None,
-        };
-
-        board
+        }
     }
 }

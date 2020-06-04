@@ -49,7 +49,7 @@ impl Noise {
         value += fract_x * (1. - fract_y) * self.data[y2][x1];
         value += (1. - fract_x) * (1. - fract_y) * self.data[y2][x2];
 
-        return value;
+        value
     }
 
     fn turbulence(&self, x: f64, y: f64, initial_size: f64) -> f64 {
@@ -62,7 +62,7 @@ impl Noise {
             size /= 2.0;
         }
 
-        return 128.0 * value / initial_size;
+        128.0 * value / initial_size
     }
 }
 
@@ -95,5 +95,5 @@ pub fn rawwood(width: u32, height: u32, offsetstdev: f64) -> image::RgbImage {
         *pixel = image::Rgb([120 + sine_value as u8, 70 + sine_value as u8, 70]);
     }
 
-    return imgbuf;
+    imgbuf
 }

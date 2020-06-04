@@ -1,16 +1,17 @@
-const TAK1: &'static [u8] = include_bytes!("optimum.png");
+const TAK1: &[u8] = include_bytes!("optimum.png");
 
 pub fn background_img(square_size_in_pixel: f32) -> image::RgbImage {
-    if square_size_in_pixel == 100.0 {
+    if (square_size_in_pixel - 100.0).abs() < std::f32::EPSILON {
         return image::load_from_memory(&TAK1).unwrap().to_rgb();
     }
 
-    let raw_board = rawboard(square_size_in_pixel);
+    rawboard(square_size_in_pixel)
     // If I succeed in implementing GIMP's bump_map later, then I will resurrect this code
     /*
     extern crate cloth_bumpmap;
     [dependencies]
     cloth_bumpmap = "0.1.1"
+    let raw_board = rawboard(square_size_in_pixel);
     let (width, height) = rawboard.dimensions();
     let bumpmap = cloth_bumpmap::cloth_bumpmap(width, height)?;
 
@@ -24,8 +25,8 @@ pub fn background_img(square_size_in_pixel: f32) -> image::RgbImage {
     )
     .unwrap();
     clothed.save("clothed.png").unwrap();
-    */
     raw_board
+    */
 }
 
 fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
@@ -72,7 +73,7 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
         /* Now draw the lines */
 
         /* horizontal and vertical */
-        for loc in vec![-4.5, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5, 4.5] {
+        for loc in &[-4.5, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5, 4.5] {
             if (loc - cx).abs() <= line_width / 2.0 && cy.abs() <= 4.5 + line_width / 2.0 {
                 *pixel = line_color;
             }
@@ -116,5 +117,5 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
         }
     }
 
-    return imgbuf;
+    imgbuf
 }
