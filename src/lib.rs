@@ -9,7 +9,9 @@ mod tests {
         field.render(Side::IASide).save("a.png").unwrap();
         field.render(Side::ASide).save("b.png").unwrap();
 
-        field.move_to_opponent_hop1zuo1((Row::A, Column::K)).unwrap();
+        field
+            .move_to_opponent_hop1zuo1((Row::A, Column::K))
+            .unwrap();
 
         field.render(Side::IASide).save("a2.png").unwrap();
         field.render(Side::ASide).save("b2.png").unwrap();
@@ -548,20 +550,16 @@ impl Field {
         };
         let (width, height) = background.dimensions();
 
+        let one_if_ia_is_down: i32 = match down_side {
+            Side::IASide => 1,
+            Side::ASide => -1,
+        };
+
         {
             let mut i: usize = 0;
             for p in &self.a_side_hand {
-                let vert_offset = (6 + (i / 9)) as i32
-                    * (match down_side {
-                        Side::IASide => -1,
-                        Side::ASide => 1,
-                    });
-
-                let horiz_offset = ((i % 9) as i32 - 4)
-                    * (match down_side {
-                        Side::IASide => -1,
-                        Side::ASide => 1,
-                    });
+                let vert_offset = (6 + (i / 9)) as i32 * -one_if_ia_is_down;
+                let horiz_offset = ((i % 9) as i32 - 4) * -one_if_ia_is_down;
 
                 let mut sub_image = background.sub_image(
                     ((width / 2 - self.piece_dimension / 2) as i32
@@ -588,17 +586,8 @@ impl Field {
 
             /* when placed from hop1 zuo1, the focus_index should be out of bound */
             {
-                let vert_offset = (6 + (i / 9)) as i32
-                    * (match down_side {
-                        Side::IASide => -1,
-                        Side::ASide => 1,
-                    });
-
-                let horiz_offset = ((i % 9) as i32 - 4)
-                    * (match down_side {
-                        Side::IASide => -1,
-                        Side::ASide => 1,
-                    });
+                let vert_offset = (6 + (i / 9)) as i32 * -one_if_ia_is_down;
+                let horiz_offset = ((i % 9) as i32 - 4) * -one_if_ia_is_down;
 
                 let mut sub_image = background.sub_image(
                     ((width / 2 - self.piece_dimension / 2) as i32
@@ -618,17 +607,8 @@ impl Field {
         {
             let mut i: usize = 0;
             for p in &self.ia_side_hand {
-                let vert_offset = (6 + (i / 9)) as i32
-                    * (match down_side {
-                        Side::IASide => 1,
-                        Side::ASide => -1,
-                    });
-
-                let horiz_offset = ((i % 9) as i32 - 4)
-                    * (match down_side {
-                        Side::IASide => 1,
-                        Side::ASide => -1,
-                    });
+                let vert_offset = (6 + (i / 9)) as i32 * one_if_ia_is_down;
+                let horiz_offset = ((i % 9) as i32 - 4) * one_if_ia_is_down;
 
                 let mut sub_image = background.sub_image(
                     ((width / 2 - self.piece_dimension / 2) as i32
@@ -655,17 +635,8 @@ impl Field {
 
             /* when placed from hop1 zuo1, the focus_index should be out of bound */
             {
-                let vert_offset = (6 + (i / 9)) as i32
-                    * (match down_side {
-                        Side::IASide => 1,
-                        Side::ASide => -1,
-                    });
-
-                let horiz_offset = ((i % 9) as i32 - 4)
-                    * (match down_side {
-                        Side::IASide => 1,
-                        Side::ASide => -1,
-                    });
+                let vert_offset = (6 + (i / 9)) as i32 * one_if_ia_is_down;
+                let horiz_offset = ((i % 9) as i32 - 4) * one_if_ia_is_down;
 
                 let mut sub_image = background.sub_image(
                     ((width / 2 - self.piece_dimension / 2) as i32
@@ -749,21 +720,11 @@ impl Field {
                 let mut sub_image = background.sub_image(
                     ((width / 2 - self.piece_dimension / 2) as i32
                         - (self.square_dimension as i32 - self.piece_dimension as i32) / 2
-                            * if Side::IASide == down_side {
-                                /* strictly speaking not accurate, but fine */
-                                1
-                            } else {
-                                -1
-                            }
+                            * one_if_ia_is_down  /* strictly speaking not accurate, but fine */
                         + self.square_dimension as i32 * horiz_offset) as u32,
                     ((height / 2 - self.piece_dimension / 2) as i32
                         + (self.square_dimension as i32 - self.piece_dimension as i32) / 2
-                            * if Side::IASide == down_side {
-                                /* strictly speaking not accurate, but fine */
-                                1
-                            } else {
-                                -1
-                            }
+                            * one_if_ia_is_down  /* strictly speaking not accurate, but fine */
                         + self.square_dimension as i32 * vert_offset) as u32,
                     self.piece_dimension,
                     self.piece_dimension,
