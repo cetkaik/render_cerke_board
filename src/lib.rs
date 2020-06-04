@@ -306,13 +306,38 @@ impl Default for Field {
     }
 }
 
+use crate::image::GenericImage;
+
 impl Field {
+    fn place_img_on_subimg_regarding_side(
+        &self,
+        down_side: Side,
+        side_to_be_compared_against: Side,
+        image: &image::RgbImage,
+        sub_image: &mut image::SubImage<&mut image::RgbImage>,
+    ) {
+        for (x, y, pixel) in image.enumerate_pixels() {
+            sub_image.put_pixel(
+                if down_side == side_to_be_compared_against {
+                    x
+                } else {
+                    self.piece_dimension - x
+                },
+                if down_side == side_to_be_compared_against {
+                    y
+                } else {
+                    self.piece_dimension - y
+                },
+                *pixel,
+            );
+        }
+    }
+
     fn put_border_on_sub_image(
         &self,
         sub_image: &mut image::SubImage<&mut image::RgbImage>,
         weight: u32,
     ) {
-        use crate::image::GenericImage;
         for x in 0..self.piece_dimension {
             for y in 0..self.piece_dimension {
                 if x < weight /* FIXME: not scale invariant */
@@ -516,7 +541,6 @@ impl Field {
     }
 
     pub fn render(&self, down_side: Side) -> image::RgbImage {
-        use crate::image::GenericImage;
         let mut background = if down_side == Side::IASide {
             self.background.clone()
         } else {
@@ -548,21 +572,12 @@ impl Field {
                     self.piece_dimension,
                 );
 
-                for (x, y, pixel) in p.image.enumerate_pixels() {
-                    sub_image.put_pixel(
-                        if down_side == Side::ASide {
-                            x
-                        } else {
-                            self.piece_dimension - x
-                        },
-                        if down_side == Side::ASide {
-                            y
-                        } else {
-                            self.piece_dimension - y
-                        },
-                        *pixel,
-                    );
-                }
+                self.place_img_on_subimg_regarding_side(
+                    down_side,
+                    Side::ASide,
+                    &p.image,
+                    &mut sub_image,
+                );
 
                 if Some(i) == self.a_side_focus_index {
                     self.put_border_on_sub_image(&mut sub_image, 9);
@@ -624,21 +639,12 @@ impl Field {
                     self.piece_dimension,
                 );
 
-                for (x, y, pixel) in p.image.enumerate_pixels() {
-                    sub_image.put_pixel(
-                        if down_side == Side::IASide {
-                            x
-                        } else {
-                            self.piece_dimension - x
-                        },
-                        if down_side == Side::IASide {
-                            y
-                        } else {
-                            self.piece_dimension - y
-                        },
-                        *pixel,
-                    );
-                }
+                self.place_img_on_subimg_regarding_side(
+                    down_side,
+                    Side::IASide,
+                    &p.image,
+                    &mut sub_image,
+                );
 
                 if Some(i) == self.ia_side_focus_index {
                     self.put_border_on_sub_image(&mut sub_image, 9);
@@ -689,21 +695,12 @@ impl Field {
                 self.piece_dimension,
             );
 
-            for (x, y, pixel) in self.field[&(*row, *col)].image().enumerate_pixels() {
-                sub_image.put_pixel(
-                    if self.field[&(*row, *col)].physical_side() == down_side {
-                        x
-                    } else {
-                        self.piece_dimension - x
-                    },
-                    if self.field[&(*row, *col)].physical_side() == down_side {
-                        y
-                    } else {
-                        self.piece_dimension - y
-                    },
-                    *pixel,
-                );
-            }
+            self.place_img_on_subimg_regarding_side(
+                down_side,
+                self.field[&(*row, *col)].physical_side(),
+                &self.field[&(*row, *col)].image(),
+                &mut sub_image,
+            );
         }
 
         for (row, col) in self.focus.keys() {
@@ -799,21 +796,12 @@ impl Field {
                 self.piece_dimension,
             );
 
-            for (x, y, pixel) in piece.image().enumerate_pixels() {
-                sub_image.put_pixel(
-                    if piece.physical_side() == down_side {
-                        x
-                    } else {
-                        self.piece_dimension - x
-                    },
-                    if piece.physical_side() == down_side {
-                        y
-                    } else {
-                        self.piece_dimension - y
-                    },
-                    *pixel,
-                );
-            }
+            self.place_img_on_subimg_regarding_side(
+                down_side,
+                piece.physical_side(),
+                &piece.image(),
+                &mut sub_image,
+            );
 
             if self.focus.contains_key(&(*row, *col)) {
                 self.put_border_on_sub_image(&mut sub_image, 9);
