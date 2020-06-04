@@ -227,8 +227,8 @@ use std::collections::HashMap;
 
 pub struct Field {
     field: HashMap<Coord, PieceOnField>,
-    a_side_hand: Vec<PhysicalNonTam2Piece>,
-    ia_side_hand: Vec<PhysicalNonTam2Piece>,
+    a_side_hop1zuo1: Vec<PhysicalNonTam2Piece>,
+    ia_side_hop1zuo1: Vec<PhysicalNonTam2Piece>,
     background: image::RgbImage,
     piece_dimension: u32,
     square_dimension: u32,
@@ -356,8 +356,8 @@ impl Field {
     fn debug_assert_49_piece(&self) {
         debug_assert_eq!(
             self.field.len()
-                + self.a_side_hand.len()
-                + self.ia_side_hand.len()
+                + self.a_side_hop1zuo1.len()
+                + self.ia_side_hop1zuo1.len()
                 + if self.floating.is_some() { 1 } else { 0 },
             49
         );
@@ -386,24 +386,24 @@ impl Field {
 
         let nontam2piece = if side == Side::ASide {
             let ind = self
-                .a_side_hand
+                .a_side_hop1zuo1
                 .iter()
                 .position(|p| p.color == color && p.profession == profession)
                 .ok_or(OperationError::NoMatchingColorOrProfession)?;
 
-            self.a_side_focus_index = Some(self.a_side_hand.len() - 1);
+            self.a_side_focus_index = Some(self.a_side_hop1zuo1.len() - 1);
 
-            self.a_side_hand.swap_remove(ind)
+            self.a_side_hop1zuo1.swap_remove(ind)
         } else {
             let ind = self
-                .ia_side_hand
+                .ia_side_hop1zuo1
                 .iter()
                 .position(|p| p.color == color && p.profession == profession)
                 .ok_or(OperationError::NoMatchingColorOrProfession)?;
 
-            self.ia_side_focus_index = Some(self.ia_side_hand.len() - 1);
+            self.ia_side_focus_index = Some(self.ia_side_hop1zuo1.len() - 1);
 
-            self.ia_side_hand.swap_remove(ind)
+            self.ia_side_hop1zuo1.swap_remove(ind)
         };
 
         self.field
@@ -435,13 +435,13 @@ impl Field {
         if side == Side::ASide {
             self.delete_focus();
             self.focus.insert(coord, false);
-            self.ia_side_focus_index = Some(self.ia_side_hand.len());
-            self.ia_side_hand.push(nontam2piece);
+            self.ia_side_focus_index = Some(self.ia_side_hop1zuo1.len());
+            self.ia_side_hop1zuo1.push(nontam2piece);
         } else {
             self.delete_focus();
             self.focus.insert(coord, false);
-            self.a_side_focus_index = Some(self.a_side_hand.len());
-            self.a_side_hand.push(nontam2piece);
+            self.a_side_focus_index = Some(self.a_side_hop1zuo1.len());
+            self.a_side_hop1zuo1.push(nontam2piece);
         }
 
         self.debug_assert_49_piece();
@@ -542,6 +542,117 @@ impl Field {
         Ok(())
     }
 
+    fn render_a_side_hop1zuo1(&self, background: &mut image::RgbImage, down_side: Side) {
+        let one_if_ia_is_down: i32 = match down_side {
+            Side::IASide => 1,
+            Side::ASide => -1,
+        };
+
+        let (width, height) = background.dimensions();
+        let mut i: usize = 0;
+        for p in &self.a_side_hop1zuo1 {
+            let vert_offset = (6 + (i / 9)) as i32 * -one_if_ia_is_down;
+            let horiz_offset = ((i % 9) as i32 - 4) * -one_if_ia_is_down;
+
+            let mut sub_image = background.sub_image(
+                ((width / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * horiz_offset) as u32,
+                ((height / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * vert_offset) as u32,
+                self.piece_dimension,
+                self.piece_dimension,
+            );
+
+            self.place_img_on_subimg_regarding_side(
+                down_side,
+                Side::ASide,
+                &p.image,
+                &mut sub_image,
+            );
+
+            if Some(i) == self.a_side_focus_index {
+                self.put_border_on_sub_image(&mut sub_image, 9);
+            }
+
+            i += 1;
+        }
+
+        /* when placed from hop1 zuo1, the focus_index should be out of bound */
+        {
+            let vert_offset = (6 + (i / 9)) as i32 * -one_if_ia_is_down;
+            let horiz_offset = ((i % 9) as i32 - 4) * -one_if_ia_is_down;
+
+            let mut sub_image = background.sub_image(
+                ((width / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * horiz_offset) as u32,
+                ((height / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * vert_offset) as u32,
+                self.piece_dimension,
+                self.piece_dimension,
+            );
+
+            if Some(i) == self.a_side_focus_index {
+                self.put_border_on_sub_image(&mut sub_image, 9);
+            }
+        }
+    }
+
+    fn render_ia_side_hop1zuo1(&self, background: &mut image::RgbImage, down_side: Side) {
+        let one_if_ia_is_down: i32 = match down_side {
+            Side::IASide => 1,
+            Side::ASide => -1,
+        };
+
+        let (width, height) = background.dimensions();
+
+        let mut i: usize = 0;
+        for p in &self.ia_side_hop1zuo1 {
+            let vert_offset = (6 + (i / 9)) as i32 * one_if_ia_is_down;
+            let horiz_offset = ((i % 9) as i32 - 4) * one_if_ia_is_down;
+
+            let mut sub_image = background.sub_image(
+                ((width / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * horiz_offset) as u32,
+                ((height / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * vert_offset) as u32,
+                self.piece_dimension,
+                self.piece_dimension,
+            );
+
+            self.place_img_on_subimg_regarding_side(
+                down_side,
+                Side::IASide,
+                &p.image,
+                &mut sub_image,
+            );
+
+            if Some(i) == self.ia_side_focus_index {
+                self.put_border_on_sub_image(&mut sub_image, 9);
+            }
+
+            i += 1;
+        }
+
+        /* when placed from hop1 zuo1, the focus_index should be out of bound */
+        {
+            let vert_offset = (6 + (i / 9)) as i32 * one_if_ia_is_down;
+            let horiz_offset = ((i % 9) as i32 - 4) * one_if_ia_is_down;
+
+            let mut sub_image = background.sub_image(
+                ((width / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * horiz_offset) as u32,
+                ((height / 2 - self.piece_dimension / 2) as i32
+                    + self.square_dimension as i32 * vert_offset) as u32,
+                self.piece_dimension,
+                self.piece_dimension,
+            );
+
+            if Some(i) == self.ia_side_focus_index {
+                self.put_border_on_sub_image(&mut sub_image, 9);
+            }
+        }
+    }
+
     pub fn render(&self, down_side: Side) -> image::RgbImage {
         let mut background = if down_side == Side::IASide {
             self.background.clone()
@@ -555,103 +666,8 @@ impl Field {
             Side::ASide => -1,
         };
 
-        {
-            let mut i: usize = 0;
-            for p in &self.a_side_hand {
-                let vert_offset = (6 + (i / 9)) as i32 * -one_if_ia_is_down;
-                let horiz_offset = ((i % 9) as i32 - 4) * -one_if_ia_is_down;
-
-                let mut sub_image = background.sub_image(
-                    ((width / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * horiz_offset) as u32,
-                    ((height / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * vert_offset) as u32,
-                    self.piece_dimension,
-                    self.piece_dimension,
-                );
-
-                self.place_img_on_subimg_regarding_side(
-                    down_side,
-                    Side::ASide,
-                    &p.image,
-                    &mut sub_image,
-                );
-
-                if Some(i) == self.a_side_focus_index {
-                    self.put_border_on_sub_image(&mut sub_image, 9);
-                }
-
-                i += 1;
-            }
-
-            /* when placed from hop1 zuo1, the focus_index should be out of bound */
-            {
-                let vert_offset = (6 + (i / 9)) as i32 * -one_if_ia_is_down;
-                let horiz_offset = ((i % 9) as i32 - 4) * -one_if_ia_is_down;
-
-                let mut sub_image = background.sub_image(
-                    ((width / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * horiz_offset) as u32,
-                    ((height / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * vert_offset) as u32,
-                    self.piece_dimension,
-                    self.piece_dimension,
-                );
-
-                if Some(i) == self.a_side_focus_index {
-                    self.put_border_on_sub_image(&mut sub_image, 9);
-                }
-            }
-        }
-
-        {
-            let mut i: usize = 0;
-            for p in &self.ia_side_hand {
-                let vert_offset = (6 + (i / 9)) as i32 * one_if_ia_is_down;
-                let horiz_offset = ((i % 9) as i32 - 4) * one_if_ia_is_down;
-
-                let mut sub_image = background.sub_image(
-                    ((width / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * horiz_offset) as u32,
-                    ((height / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * vert_offset) as u32,
-                    self.piece_dimension,
-                    self.piece_dimension,
-                );
-
-                self.place_img_on_subimg_regarding_side(
-                    down_side,
-                    Side::IASide,
-                    &p.image,
-                    &mut sub_image,
-                );
-
-                if Some(i) == self.ia_side_focus_index {
-                    self.put_border_on_sub_image(&mut sub_image, 9);
-                }
-
-                i += 1;
-            }
-
-            /* when placed from hop1 zuo1, the focus_index should be out of bound */
-            {
-                let vert_offset = (6 + (i / 9)) as i32 * one_if_ia_is_down;
-                let horiz_offset = ((i % 9) as i32 - 4) * one_if_ia_is_down;
-
-                let mut sub_image = background.sub_image(
-                    ((width / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * horiz_offset) as u32,
-                    ((height / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * vert_offset) as u32,
-                    self.piece_dimension,
-                    self.piece_dimension,
-                );
-
-                if Some(i) == self.ia_side_focus_index {
-                    self.put_border_on_sub_image(&mut sub_image, 9);
-                }
-            }
-        }
+        self.render_a_side_hop1zuo1(&mut background, down_side);
+        self.render_ia_side_hop1zuo1(&mut background, down_side);
 
         for (row, col) in self.field.keys() {
             let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
@@ -894,8 +910,8 @@ impl Field {
         }
 
         Field {
-            a_side_hand: Vec::new(),
-            ia_side_hand: Vec::new(),
+            a_side_hop1zuo1: Vec::new(),
+            ia_side_hop1zuo1: Vec::new(),
             field: hashmap,
             background: background::background_img(piece_dimension as f32 * 1.25),
             piece_dimension,
