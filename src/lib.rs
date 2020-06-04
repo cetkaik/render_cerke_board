@@ -653,22 +653,8 @@ impl Field {
         }
     }
 
-    pub fn render(&self, down_side: Side) -> image::RgbImage {
-        let mut background = if down_side == Side::IASide {
-            self.background.clone()
-        } else {
-            image::imageops::rotate180(&self.background)
-        };
+    fn render_main_field(&self, background: &mut image::RgbImage, down_side: Side ) {
         let (width, height) = background.dimensions();
-
-        let one_if_ia_is_down: i32 = match down_side {
-            Side::IASide => 1,
-            Side::ASide => -1,
-        };
-
-        self.render_a_side_hop1zuo1(&mut background, down_side);
-        self.render_ia_side_hop1zuo1(&mut background, down_side);
-
         for (row, col) in self.field.keys() {
             let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
             let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
@@ -689,7 +675,27 @@ impl Field {
                 &mut sub_image,
             );
         }
+    }
 
+    pub fn render(&self, down_side: Side) -> image::RgbImage {
+        let mut background = if down_side == Side::IASide {
+            self.background.clone()
+        } else {
+            image::imageops::rotate180(&self.background)
+        };
+        let (width, height) = background.dimensions();
+
+        let one_if_ia_is_down: i32 = match down_side {
+            Side::IASide => 1,
+            Side::ASide => -1,
+        };
+
+        // render the pieces
+        self.render_a_side_hop1zuo1(&mut background, down_side);
+        self.render_ia_side_hop1zuo1(&mut background, down_side);
+        self.render_main_field(&mut background, down_side);
+
+        // then render the focuses
         for (row, col) in self.focus.keys() {
             let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
             let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
