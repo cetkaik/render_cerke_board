@@ -597,7 +597,7 @@ impl Field {
         }
     }
 
-    fn render_ia_side_hop1zuo1(&self, background: &mut image::RgbImage, down_side: Side) {
+    fn render_ia_side_hop1zuo1(&self, mut background: &mut image::RgbImage, down_side: Side) {
         let one_if_ia_is_down: i32 = match down_side {
             Side::IASide => 1,
             Side::ASide => -1,
@@ -638,13 +638,10 @@ impl Field {
             let vert_offset = (6 + (i / 9)) as i32 * one_if_ia_is_down;
             let horiz_offset = ((i % 9) as i32 - 4) * one_if_ia_is_down;
 
-            let mut sub_image = background.sub_image(
-                ((width / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * horiz_offset) as u32,
-                ((height / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * vert_offset) as u32,
-                self.piece_dimension,
-                self.piece_dimension,
+            let mut sub_image = self.get_subimage_from_horiz_vert_offset(
+                &mut background,
+                horiz_offset,
+                vert_offset,
             );
 
             if Some(i) == self.ia_side_focus_index {
@@ -653,21 +650,32 @@ impl Field {
         }
     }
 
-    fn render_main_field(&self, background: &mut image::RgbImage, down_side: Side ) {
+    fn get_subimage_from_horiz_vert_offset<'a>(
+        &self,
+        background: &'a mut image::RgbImage,
+        horiz_offset: i32,
+        vert_offset: i32,
+    ) -> image::SubImage<&'a mut image::RgbImage> {
         let (width, height) = background.dimensions();
+        background.sub_image(
+            ((width / 2 - self.piece_dimension / 2) as i32
+                + self.square_dimension as i32 * horiz_offset) as u32,
+            ((height / 2 - self.piece_dimension / 2) as i32
+                + self.square_dimension as i32 * vert_offset) as u32,
+            self.piece_dimension,
+            self.piece_dimension,
+        )
+    }
+
+    fn render_main_field(&self, mut background: &mut image::RgbImage, down_side: Side) {
         for (row, col) in self.field.keys() {
             let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
             let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
-
-            let mut sub_image = background.sub_image(
-                ((width / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * horiz_offset) as u32,
-                ((height / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * vert_offset) as u32,
-                self.piece_dimension,
-                self.piece_dimension,
+            let mut sub_image = self.get_subimage_from_horiz_vert_offset(
+                &mut background,
+                horiz_offset,
+                vert_offset,
             );
-
             self.place_img_on_subimg_regarding_side(
                 down_side,
                 self.field[&(*row, *col)].physical_side(),
@@ -702,13 +710,10 @@ impl Field {
             if !self.focus[&(*row, *col)]
             /* not floating */
             {
-                let mut sub_image = background.sub_image(
-                    ((width / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * horiz_offset) as u32,
-                    ((height / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * vert_offset) as u32,
-                    self.piece_dimension,
-                    self.piece_dimension,
+                let mut sub_image = self.get_subimage_from_horiz_vert_offset(
+                    &mut background,
+                    horiz_offset,
+                    vert_offset,
                 );
                 self.put_border_on_sub_image(&mut sub_image, 9);
             } else if let Some(((row2, col2), piece)) = &self.floating {
