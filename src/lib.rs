@@ -195,7 +195,7 @@ fn multiply_image(a: &image::RgbImage, b: &image::RgbImage) -> Option<image::Rgb
     Some(c)
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum Row {
     A,
     E,
@@ -208,7 +208,7 @@ pub enum Row {
     IA,
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum Column {
     K,
     L,
