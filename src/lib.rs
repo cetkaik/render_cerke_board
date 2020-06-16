@@ -77,7 +77,7 @@ const RDAU: &[u8] = include_bytes!("rdau.png_80x80.png");
 const RIO: &[u8] = include_bytes!("rio.png_80x80.png");
 const RUAI: &[u8] = include_bytes!("ruai.png_80x80.png");
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Color {
     /// Red, 赤
     Kok1,
@@ -86,7 +86,7 @@ pub enum Color {
     Huok2,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Profession {
     /// Vessel, 船, felkana
     Nuak1,
@@ -119,10 +119,49 @@ pub enum Profession {
     Io,
 }
 
-#[derive(Eq, PartialEq, Clone, Copy)]
+#[derive(Eq, PartialEq, Clone, Copy, Debug)]
 pub enum Side {
     ASide,
     IASide,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct LogicalNonTam2Piece {
+    pub color: Color,
+    pub profession: Profession,
+}
+
+impl PhysicalNonTam2Piece {
+    pub fn as_logical(&self) -> LogicalNonTam2Piece {
+        LogicalNonTam2Piece {
+            color: self.color,
+            profession: self.profession,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct LogicalTam {}
+
+impl PhysicalTam {
+    pub fn as_logical(&self) -> LogicalTam {
+        LogicalTam {}
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum LogicalPieceOnField {
+    NonTam2(LogicalNonTam2Piece, Side),
+    Tam2(LogicalTam),
+}
+
+impl PieceOnField {
+    pub fn as_logical(&self) -> LogicalPieceOnField {
+        match self {
+            PieceOnField::NonTam2(p, s) => LogicalPieceOnField::NonTam2(p.as_logical(), *s),
+            PieceOnField::Tam2(p) => LogicalPieceOnField::Tam2(p.as_logical()),
+        }
+    }
 }
 
 struct PhysicalNonTam2Piece {
@@ -238,6 +277,40 @@ pub struct Field {
     ia_side_focus_index: Option<usize>,
 }
 
+#[derive(Clone)]
+pub struct LogicalField {
+    pub field: HashMap<Coord, LogicalPieceOnField>,
+    pub a_side_hop1zuo1: Vec<LogicalNonTam2Piece>,
+    pub ia_side_hop1zuo1: Vec<LogicalNonTam2Piece>,
+    pub floating: Option<(Coord, LogicalPieceOnField)>,
+}
+
+impl Field {
+    pub fn as_logical(&self) -> LogicalField {
+        LogicalField {
+            field: self
+                .field
+                .iter()
+                .map(|(k, v)| (*k, v.as_logical()))
+                .collect(),
+            a_side_hop1zuo1: self
+                .a_side_hop1zuo1
+                .iter()
+                .map(|p| p.as_logical())
+                .collect(),
+            ia_side_hop1zuo1: self
+                .ia_side_hop1zuo1
+                .iter()
+                .map(|p| p.as_logical())
+                .collect(),
+            floating: match &self.floating {
+                None => None,
+                Some((c, p)) => Some((*c, p.as_logical())),
+            },
+        }
+    }
+}
+
 mod background;
 mod noise;
 
@@ -263,7 +336,8 @@ pub enum OperationError {
     Tam2ToHop1Zuo1,
     TwoPiecesOnFlight,
     NoPieceOnFlight,
-    NoMatchingColorOrProfession,
+    NoMatchingColorOrProfessionInHop1Zuo1,
+    ParachutingToNonEmptySquare,
 }
 
 fn get_horiz_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
@@ -379,7 +453,7 @@ impl Field {
         self.debug_assert_49_piece();
 
         if self.field.contains_key(&coord) {
-            return Err(OperationError::MovingToNonEmptySquare);
+            return Err(OperationError::ParachutingToNonEmptySquare);
         }
 
         self.delete_focus();
@@ -389,7 +463,7 @@ impl Field {
                 .a_side_hop1zuo1
                 .iter()
                 .position(|p| p.color == color && p.profession == profession)
-                .ok_or(OperationError::NoMatchingColorOrProfession)?;
+                .ok_or(OperationError::NoMatchingColorOrProfessionInHop1Zuo1)?;
 
             self.a_side_focus_index = Some(self.a_side_hop1zuo1.len() - 1);
 
@@ -399,7 +473,7 @@ impl Field {
                 .ia_side_hop1zuo1
                 .iter()
                 .position(|p| p.color == color && p.profession == profession)
-                .ok_or(OperationError::NoMatchingColorOrProfession)?;
+                .ok_or(OperationError::NoMatchingColorOrProfessionInHop1Zuo1)?;
 
             self.ia_side_focus_index = Some(self.ia_side_hop1zuo1.len() - 1);
 
