@@ -553,6 +553,14 @@ impl Field {
         }
     }
 
+    fn get_hop1zuo1_focus_index(&self, side: Side) -> Option<usize> {
+        if side == Side::ASide {
+            self.a_side_focus_index
+        } else {
+            self.ia_side_focus_index
+        }
+    }
+
     /// # Errors
     ///
     /// Will return `Err` if either:
@@ -735,44 +743,46 @@ impl Field {
     }
 
     fn render_a_side_hop1zuo1(&self, background: &mut image::RgbImage, down_side: Side) {
-        let one_if_ia_is_down: i32 = match down_side {
-            Side::IASide => 1,
-            Side::ASide => -1,
-        };
+        let whose_hop1zuo1 = Side::ASide;
+
+        let one_if_whose_hop1zuo1_is_down: i32 = if down_side == whose_hop1zuo1 { 1 } else { -1 };
 
         let (width, height) = background.dimensions();
+
         let mut i: usize = 0;
-        for p in &self.a_side_hop1zuo1 {
-            let vert_offset = (6 + (i / 9)) as i32 * -one_if_ia_is_down;
-            let horiz_offset = ((i % 9) as i32 - 4) * -one_if_ia_is_down;
+        self.on_hop1zuo1(whose_hop1zuo1, |v| {
+            for p in v {
+                let vert_offset = (6 + (i / 9)) as i32 * one_if_whose_hop1zuo1_is_down;
+                let horiz_offset = ((i % 9) as i32 - 4) * one_if_whose_hop1zuo1_is_down;
 
-            let mut sub_image = background.sub_image(
-                ((width / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * horiz_offset) as u32,
-                ((height / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * vert_offset) as u32,
-                self.piece_dimension,
-                self.piece_dimension,
-            );
+                let mut sub_image = background.sub_image(
+                    ((width / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * horiz_offset) as u32,
+                    ((height / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * vert_offset) as u32,
+                    self.piece_dimension,
+                    self.piece_dimension,
+                );
 
-            self.place_img_on_subimg_regarding_side(
-                down_side,
-                Side::ASide,
-                &p.image,
-                &mut sub_image,
-            );
+                self.place_img_on_subimg_regarding_side(
+                    down_side,
+                    whose_hop1zuo1,
+                    &p.image,
+                    &mut sub_image,
+                );
 
-            if Some(i) == self.a_side_focus_index {
-                self.put_border_on_sub_image(&mut sub_image, 9);
+                if Some(i) == self.get_hop1zuo1_focus_index(whose_hop1zuo1) {
+                    self.put_border_on_sub_image(&mut sub_image, 9);
+                }
+
+                i += 1;
             }
-
-            i += 1;
-        }
+        });
 
         /* when placed from hop1 zuo1, the focus_index should be out of bound */
         {
-            let vert_offset = (6 + (i / 9)) as i32 * -one_if_ia_is_down;
-            let horiz_offset = ((i % 9) as i32 - 4) * -one_if_ia_is_down;
+            let vert_offset = (6 + (i / 9)) as i32 * one_if_whose_hop1zuo1_is_down;
+            let horiz_offset = ((i % 9) as i32 - 4) * one_if_whose_hop1zuo1_is_down;
 
             let mut sub_image = background.sub_image(
                 ((width / 2 - self.piece_dimension / 2) as i32
@@ -783,52 +793,53 @@ impl Field {
                 self.piece_dimension,
             );
 
-            if Some(i) == self.a_side_focus_index {
+            if Some(i) == self.get_hop1zuo1_focus_index(whose_hop1zuo1) {
                 self.put_border_on_sub_image(&mut sub_image, 9);
             }
         }
     }
 
     fn render_ia_side_hop1zuo1(&self, mut background: &mut image::RgbImage, down_side: Side) {
-        let one_if_ia_is_down: i32 = match down_side {
-            Side::IASide => 1,
-            Side::ASide => -1,
-        };
+        let whose_hop1zuo1 = Side::IASide;
+
+        let one_if_whose_hop1zuo1_is_down: i32 = if down_side == whose_hop1zuo1 { 1 } else { -1 };
 
         let (width, height) = background.dimensions();
 
         let mut i: usize = 0;
-        for p in &self.ia_side_hop1zuo1 {
-            let vert_offset = (6 + (i / 9)) as i32 * one_if_ia_is_down;
-            let horiz_offset = ((i % 9) as i32 - 4) * one_if_ia_is_down;
+        self.on_hop1zuo1(whose_hop1zuo1, |v| {
+            for p in v {
+                let vert_offset = (6 + (i / 9)) as i32 * one_if_whose_hop1zuo1_is_down;
+                let horiz_offset = ((i % 9) as i32 - 4) * one_if_whose_hop1zuo1_is_down;
 
-            let mut sub_image = background.sub_image(
-                ((width / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * horiz_offset) as u32,
-                ((height / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * vert_offset) as u32,
-                self.piece_dimension,
-                self.piece_dimension,
-            );
+                let mut sub_image = background.sub_image(
+                    ((width / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * horiz_offset) as u32,
+                    ((height / 2 - self.piece_dimension / 2) as i32
+                        + self.square_dimension as i32 * vert_offset) as u32,
+                    self.piece_dimension,
+                    self.piece_dimension,
+                );
 
-            self.place_img_on_subimg_regarding_side(
-                down_side,
-                Side::IASide,
-                &p.image,
-                &mut sub_image,
-            );
+                self.place_img_on_subimg_regarding_side(
+                    down_side,
+                    whose_hop1zuo1,
+                    &p.image,
+                    &mut sub_image,
+                );
 
-            if Some(i) == self.ia_side_focus_index {
-                self.put_border_on_sub_image(&mut sub_image, 9);
+                if Some(i) == self.get_hop1zuo1_focus_index(whose_hop1zuo1) {
+                    self.put_border_on_sub_image(&mut sub_image, 9);
+                }
+
+                i += 1;
             }
-
-            i += 1;
-        }
+        });
 
         /* when placed from hop1 zuo1, the focus_index should be out of bound */
         {
-            let vert_offset = (6 + (i / 9)) as i32 * one_if_ia_is_down;
-            let horiz_offset = ((i % 9) as i32 - 4) * one_if_ia_is_down;
+            let vert_offset = (6 + (i / 9)) as i32 * one_if_whose_hop1zuo1_is_down;
+            let horiz_offset = ((i % 9) as i32 - 4) * one_if_whose_hop1zuo1_is_down;
 
             let mut sub_image = self.get_subimage_from_horiz_vert_offset(
                 &mut background,
@@ -836,7 +847,7 @@ impl Field {
                 vert_offset,
             );
 
-            if Some(i) == self.ia_side_focus_index {
+            if Some(i) == self.get_hop1zuo1_focus_index(whose_hop1zuo1) {
                 self.put_border_on_sub_image(&mut sub_image, 9);
             }
         }
