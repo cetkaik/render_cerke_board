@@ -742,7 +742,7 @@ impl Field {
         Ok(())
     }
 
-    fn render_a_side_hop1zuo1(&self, background: &mut image::RgbImage, down_side: Side) {
+    fn render_a_side_hop1zuo1(&self, mut background: &mut image::RgbImage, down_side: Side) {
         let whose_hop1zuo1 = Side::ASide;
 
         let one_if_whose_hop1zuo1_is_down: i32 = if down_side == whose_hop1zuo1 { 1 } else { -1 };
@@ -784,13 +784,10 @@ impl Field {
             let vert_offset = (6 + (i / 9)) as i32 * one_if_whose_hop1zuo1_is_down;
             let horiz_offset = ((i % 9) as i32 - 4) * one_if_whose_hop1zuo1_is_down;
 
-            let mut sub_image = background.sub_image(
-                ((width / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * horiz_offset) as u32,
-                ((height / 2 - self.piece_dimension / 2) as i32
-                    + self.square_dimension as i32 * vert_offset) as u32,
-                self.piece_dimension,
-                self.piece_dimension,
+            let mut sub_image = self.get_subimage_from_horiz_vert_offset(
+                &mut background,
+                horiz_offset,
+                vert_offset,
             );
 
             if Some(i) == self.get_hop1zuo1_focus_index(whose_hop1zuo1) {
