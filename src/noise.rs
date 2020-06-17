@@ -84,10 +84,10 @@ pub fn rawwood(width: u32, height: u32, offsetstdev: f64) -> image::RgbImage {
     let phase = rng.sample(Uniform::from(0.0..std::f64::consts::PI));
 
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-        let x_value_times_scale = x as f64 - width as f64 / 2. + offset_x; // dimension: px
-        let y_value_times_scale = y as f64 - height as f64 / 2. + offset_y; // dimension: px
+        let x_value_times_scale = f64::from(x) - f64::from(width) / 2. + offset_x; // dimension: px
+        let y_value_times_scale = f64::from(y) - f64::from(height) / 2. + offset_y; // dimension: px
         let dist_value_times_scale = x_value_times_scale.hypot(y_value_times_scale)
-            + turb * noise.turbulence(x as f64, y as f64, turb_size) / 256.0;
+            + turb * noise.turbulence(f64::from(x), f64::from(y), turb_size) / 256.0;
         let sine_value = 88.0
             * ((wavenumber * dist_value_times_scale * std::f64::consts::PI + phase).sin())
                 .abs()

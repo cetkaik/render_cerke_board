@@ -1,10 +1,18 @@
+#![warn(clippy::pedantic)]
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_wrap,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss
+)]
+
 extern crate image;
 
 #[cfg(test)]
 mod tests {
     #[test]
     fn test() {
-        use super::*;
+        use super::{Color, Column, Field, Profession, Row, Side};
         let mut field = Field::new();
         field.render(Side::IASide).save("a.png").unwrap();
         field.render(Side::ASide).save("b.png").unwrap();
