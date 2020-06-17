@@ -133,6 +133,18 @@ pub enum Side {
     IASide,
 }
 
+use std::ops;
+impl ops::Not for Side {
+    type Output = Side;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Side::ASide => Side::IASide,
+            Side::IASide => Side::ASide,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct LogicalNonTam2Piece {
     pub color: Color,
@@ -503,6 +515,44 @@ impl Field {
         self.a_side_focus_index = None;
     }
 
+    fn on_hop1zuo1<T, F>(&self, side: Side, f: F) -> T
+    where
+        F: FnOnce(&[PhysicalNonTam2Piece]) -> T,
+    {
+        if side == Side::ASide {
+            f(&self.a_side_hop1zuo1)
+        } else {
+            f(&self.ia_side_hop1zuo1)
+        }
+    }
+
+    fn on_hop1zuo1_mut<T, F>(&mut self, side: Side, f: F) -> T
+    where
+        F: FnOnce(&mut Vec<PhysicalNonTam2Piece>) -> T,
+    {
+        if side == Side::ASide {
+            f(&mut self.a_side_hop1zuo1)
+        } else {
+            f(&mut self.ia_side_hop1zuo1)
+        }
+    }
+
+    fn hop1zuo1_len(&self, side: Side) -> usize {
+        if side == Side::ASide {
+            self.a_side_hop1zuo1.len()
+        } else {
+            self.ia_side_hop1zuo1.len()
+        }
+    }
+
+    fn set_hop1zuo1_focus_index(&mut self, side: Side, index: Option<usize>) {
+        if side == Side::ASide {
+            self.a_side_focus_index = index;
+        } else {
+            self.ia_side_focus_index = index;
+        }
+    }
+
     /// # Errors
     ///
     /// Will return `Err` if either:
@@ -523,27 +573,15 @@ impl Field {
 
         self.delete_focus();
 
-        let nontam2piece = if side == Side::ASide {
-            let ind = self
-                .a_side_hop1zuo1
-                .iter()
+        let ind = self.on_hop1zuo1(side, |v| {
+            v.iter()
                 .position(|p| p.color == color && p.profession == profession)
-                .ok_or(OperationError::NoMatchingColorOrProfessionInHop1Zuo1)?;
+                .ok_or(OperationError::NoMatchingColorOrProfessionInHop1Zuo1)
+        })?;
 
-            self.a_side_focus_index = Some(self.a_side_hop1zuo1.len() - 1);
+        self.set_hop1zuo1_focus_index(side, Some(self.hop1zuo1_len(side) - 1));
 
-            self.a_side_hop1zuo1.swap_remove(ind)
-        } else {
-            let ind = self
-                .ia_side_hop1zuo1
-                .iter()
-                .position(|p| p.color == color && p.profession == profession)
-                .ok_or(OperationError::NoMatchingColorOrProfessionInHop1Zuo1)?;
-
-            self.ia_side_focus_index = Some(self.ia_side_hop1zuo1.len() - 1);
-
-            self.ia_side_hop1zuo1.swap_remove(ind)
-        };
+        let nontam2piece = self.on_hop1zuo1_mut(side, |v| v.swap_remove(ind));
 
         self.field
             .insert(coord, PieceOnField::NonTam2(nontam2piece, side));
@@ -576,17 +614,10 @@ impl Field {
             .into_nontam2piece()
             .ok_or(OperationError::Tam2ToHop1Zuo1)?;
 
-        if side == Side::ASide {
-            self.delete_focus();
-            self.focus.insert(coord, false);
-            self.ia_side_focus_index = Some(self.ia_side_hop1zuo1.len());
-            self.ia_side_hop1zuo1.push(nontam2piece);
-        } else {
-            self.delete_focus();
-            self.focus.insert(coord, false);
-            self.a_side_focus_index = Some(self.a_side_hop1zuo1.len());
-            self.a_side_hop1zuo1.push(nontam2piece);
-        }
+        self.delete_focus();
+        self.focus.insert(coord, false);
+        self.set_hop1zuo1_focus_index(!side, Some(self.hop1zuo1_len(!side)));
+        self.on_hop1zuo1_mut(!side, move |v| v.push(nontam2piece));
 
         self.debug_assert_49_piece();
         Ok(())
