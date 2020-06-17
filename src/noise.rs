@@ -54,7 +54,7 @@ impl Noise {
 
     fn turbulence(&self, x: f64, y: f64, initial_size: f64) -> f64 {
         /* algorithm taken from https://lodev.org/cgtutor/randomnoise.html#Wood */
-        let mut value = 0.0f64;
+        let mut value = 0.0_f64;
         let mut size = initial_size;
 
         while size >= 1. {
@@ -67,7 +67,7 @@ impl Noise {
 }
 
 pub fn rawwood(width: u32, height: u32, offsetstdev: f64) -> image::RgbImage {
-    use rand::*;
+    use rand::Rng;
     let mut imgbuf = image::RgbImage::new(width, height);
 
     let noise = Noise::gen_noise(width as usize, height as usize);
@@ -79,13 +79,13 @@ pub fn rawwood(width: u32, height: u32, offsetstdev: f64) -> image::RgbImage {
 
     let mut rng = rand::thread_rng();
     let distr = rand_distr::Normal::new(0., offsetstdev).unwrap();
-    let offsetx = rng.sample(distr);
-    let offsety = rng.sample(distr);
+    let offset_x = rng.sample(distr);
+    let offset_y = rng.sample(distr);
     let phase = rng.sample(Uniform::from(0.0..std::f64::consts::PI));
 
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-        let x_value_times_scale = x as f64 - width as f64 / 2. + offsetx; // dimension: px
-        let y_value_times_scale = y as f64 - height as f64 / 2. + offsety; // dimension: px
+        let x_value_times_scale = x as f64 - width as f64 / 2. + offset_x; // dimension: px
+        let y_value_times_scale = y as f64 - height as f64 / 2. + offset_y; // dimension: px
         let dist_value_times_scale = x_value_times_scale.hypot(y_value_times_scale)
             + turb * noise.turbulence(x as f64, y as f64, turb_size) / 256.0;
         let sine_value = 88.0

@@ -1,6 +1,6 @@
 const TAK1: &[u8] = include_bytes!("optimum.png");
 
-pub fn background_img(square_size_in_pixel: f32) -> image::RgbImage {
+pub fn gen_bg(square_size_in_pixel: f32) -> image::RgbImage {
     if (square_size_in_pixel - 100.0).abs() < std::f32::EPSILON {
         return image::load_from_memory(&TAK1).unwrap().to_rgb();
     }
@@ -40,11 +40,11 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
     let cwidth = 6.376 * 2.;
     let cheight = 9.642 * 2.;
 
-    let imgx = (square_size_in_pixel * cwidth) as u32;
-    let imgy = (square_size_in_pixel * cheight) as u32;
+    let img_x = (square_size_in_pixel * cwidth) as u32;
+    let img_y = (square_size_in_pixel * cheight) as u32;
 
     /* first draw the board */
-    let mut imgbuf = image::ImageBuffer::from_pixel(imgx, imgy, tak1_color);
+    let mut imgbuf = image::ImageBuffer::from_pixel(img_x, img_y, tak1_color);
 
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
         /* the size of each square is 1.0 */
