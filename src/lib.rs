@@ -307,7 +307,7 @@ pub struct LogicalField {
 
 impl Field {
     #[must_use]
-    pub fn as_logical(&self) -> LogicalField {
+    pub fn to_logical(&self) -> LogicalField {
         LogicalField {
             field: self
                 .field
