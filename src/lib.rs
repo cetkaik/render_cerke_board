@@ -145,7 +145,7 @@ impl ops::Not for Side {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct LogicalNonTam2Piece {
     pub color: Color,
     pub profession: Profession,
@@ -799,16 +799,6 @@ impl Field {
         }
     }
 
-    fn render_a_side_hop1zuo1(&self, background: &mut image::RgbImage, down_side: Side) {
-        let whose_hop1zuo1 = Side::ASide;
-        self.render_one_side_hop1zuo1(whose_hop1zuo1, background, down_side)
-    }
-
-    fn render_ia_side_hop1zuo1(&self, background: &mut image::RgbImage, down_side: Side) {
-        let whose_hop1zuo1 = Side::IASide;
-        self.render_one_side_hop1zuo1(whose_hop1zuo1, background, down_side)
-    }
-
     fn get_subimage_from_horiz_vert_offset<'a>(
         &self,
         background: &'a mut image::RgbImage,
@@ -859,8 +849,8 @@ impl Field {
         };
 
         // render the pieces
-        self.render_a_side_hop1zuo1(&mut background, down_side);
-        self.render_ia_side_hop1zuo1(&mut background, down_side);
+        self.render_one_side_hop1zuo1(Side::ASide, &mut background, down_side);
+        self.render_one_side_hop1zuo1(Side::IASide, &mut background, down_side);
         self.render_main_field(&mut background, down_side);
 
         // then render the focuses
