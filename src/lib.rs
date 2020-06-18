@@ -750,21 +750,16 @@ impl Field {
     ) {
         let one_if_whose_hop1zuo1_is_down: i32 = if down_side == whose_hop1zuo1 { 1 } else { -1 };
 
-        let (width, height) = background.dimensions();
-
         let mut i: usize = 0;
         self.on_hop1zuo1(whose_hop1zuo1, |v| {
             for p in v {
                 let vert_offset = (6 + (i / 9)) as i32 * one_if_whose_hop1zuo1_is_down;
                 let horiz_offset = ((i % 9) as i32 - 4) * one_if_whose_hop1zuo1_is_down;
 
-                let mut sub_image = background.sub_image(
-                    ((width / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * horiz_offset) as u32,
-                    ((height / 2 - self.piece_dimension / 2) as i32
-                        + self.square_dimension as i32 * vert_offset) as u32,
-                    self.piece_dimension,
-                    self.piece_dimension,
+                let mut sub_image = self.get_subimage_from_horiz_vert_offset(
+                    &mut background,
+                    horiz_offset,
+                    vert_offset,
                 );
 
                 self.place_img_on_subimg_regarding_side(
