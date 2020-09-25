@@ -32,9 +32,9 @@ checksum = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 
 [[package]]
 name = "cetkaik_core"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "588b79067687dd84f7d9f23eeb188d63545b555ac4af29ba613857b8d0fc2962"
+checksum = "bc6906a6bddc46f011caf370419b82d5cbeb2e35751fa57ebedf39e94842f7fa"
 
 [[package]]
 name = "cfg-if"
@@ -414,7 +414,7 @@ dependencies = [
 
 [[package]]
 name = "render_cerke_board"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "cetkaik_core",
  "fastblur",
