@@ -254,33 +254,7 @@ fn multiply_image(a: &image::RgbImage, b: &image::RgbImage) -> Option<image::Rgb
     Some(c)
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-pub enum Row {
-    A,
-    E,
-    I,
-    U,
-    O,
-    Y,
-    AI,
-    AU,
-    IA,
-}
-
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-pub enum Column {
-    K,
-    L,
-    N,
-    T,
-    Z,
-    X,
-    C,
-    M,
-    P,
-}
-
-type Coord = (Row, Column);
+pub use cetkaik_core::absolute::{Row, Column, Coord};
 
 use std::collections::HashMap;
 
