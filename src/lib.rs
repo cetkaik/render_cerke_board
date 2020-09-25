@@ -85,65 +85,8 @@ const RDAU: &[u8] = include_bytes!("rdau.png_80x80.png");
 const RIO: &[u8] = include_bytes!("rio.png_80x80.png");
 const RUAI: &[u8] = include_bytes!("ruai.png_80x80.png");
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub enum Color {
-    /// Red, 赤
-    Kok1,
-
-    /// Black, 黒
-    Huok2,
-}
-
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub enum Profession {
-    /// Vessel, 船, felkana
-    Nuak1,
-
-    /// Pawn, 兵, elmer
-    Kauk2,
-
-    /// Rook, 弓, gustuer
-    Gua2,
-
-    /// Bishop, 車, vadyrd
-    Kaun1,
-
-    /// Tiger, 虎, stistyst
-    Dau2,
-
-    /// Horse, 馬, dodor
-    Maun1,
-
-    /// Clerk, 筆, kua
-    Kua2,
-
-    /// Shaman, 巫, terlsk
-    Tuk2,
-
-    /// General, 将, varxle
-    Uai1,
-
-    /// King, 王, ales
-    Io,
-}
-
-#[derive(Eq, PartialEq, Clone, Copy, Debug)]
-pub enum Side {
-    ASide,
-    IASide,
-}
-
-use std::ops;
-impl ops::Not for Side {
-    type Output = Side;
-
-    fn not(self) -> Self::Output {
-        match self {
-            Side::ASide => Side::IASide,
-            Side::IASide => Side::ASide,
-        }
-    }
-}
+use cetkaik_core::{Color, Profession};
+use cetkaik_core::absolute::{Side, Row, Column, Coord};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct LogicalNonTam2Piece {
@@ -253,8 +196,6 @@ fn multiply_image(a: &image::RgbImage, b: &image::RgbImage) -> Option<image::Rgb
     }
     Some(c)
 }
-
-pub use cetkaik_core::absolute::{Row, Column, Coord};
 
 use std::collections::HashMap;
 
