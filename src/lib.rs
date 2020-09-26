@@ -118,11 +118,11 @@ pub enum LogicalPieceOnField {
     Tam2(LogicalTam),
 }
 
-impl PieceOnField {
+impl PhysicalPieceOnField {
     pub fn as_logical(&self) -> LogicalPieceOnField {
         match self {
-            PieceOnField::NonTam2(p, s) => LogicalPieceOnField::NonTam2(p.as_logical(), *s),
-            PieceOnField::Tam2(p) => LogicalPieceOnField::Tam2(p.as_logical()),
+            PhysicalPieceOnField::NonTam2(p, s) => LogicalPieceOnField::NonTam2(p.as_logical(), *s),
+            PhysicalPieceOnField::Tam2(p) => LogicalPieceOnField::Tam2(p.as_logical()),
         }
     }
 }
@@ -137,37 +137,37 @@ struct PhysicalTam {
     image: image::RgbImage,
 }
 
-enum PieceOnField {
+enum PhysicalPieceOnField {
     NonTam2(PhysicalNonTam2Piece, Side),
     Tam2(PhysicalTam),
 }
 
-impl PieceOnField {
+impl PhysicalPieceOnField {
     fn image(&self) -> image::RgbImage {
         match self {
-            PieceOnField::NonTam2(pp, _) => pp.image.clone(),
-            PieceOnField::Tam2(pt) => pt.image.clone(),
+            PhysicalPieceOnField::NonTam2(pp, _) => pp.image.clone(),
+            PhysicalPieceOnField::Tam2(pt) => pt.image.clone(),
         }
     }
 
     fn physical_side(&self) -> Side {
         match self {
-            PieceOnField::NonTam2(_, s) => *s,
-            PieceOnField::Tam2(_) => Side::IASide,
+            PhysicalPieceOnField::NonTam2(_, s) => *s,
+            PhysicalPieceOnField::Tam2(_) => Side::IASide,
         }
     }
 
     fn into_nontam2piece(self) -> Option<(PhysicalNonTam2Piece, Side)> {
         match self {
-            PieceOnField::NonTam2(p, s) => Some((p, s)),
-            PieceOnField::Tam2(_) => None,
+            PhysicalPieceOnField::NonTam2(p, s) => Some((p, s)),
+            PhysicalPieceOnField::Tam2(_) => None,
         }
     }
 
     fn is_tam2(&self) -> bool {
         match self {
-            PieceOnField::NonTam2(_, _) => false,
-            PieceOnField::Tam2(_) => true,
+            PhysicalPieceOnField::NonTam2(_, _) => false,
+            PhysicalPieceOnField::Tam2(_) => true,
         }
     }
 }
@@ -200,13 +200,13 @@ fn multiply_image(a: &image::RgbImage, b: &image::RgbImage) -> Option<image::Rgb
 use std::collections::HashMap;
 
 pub struct Field {
-    field: HashMap<Coord, PieceOnField>,
+    field: HashMap<Coord, PhysicalPieceOnField>,
     a_side_hop1zuo1: Vec<PhysicalNonTam2Piece>,
     ia_side_hop1zuo1: Vec<PhysicalNonTam2Piece>,
     background: image::RgbImage,
     piece_dimension: u32,
     square_dimension: u32,
-    floating: Option<(Coord, PieceOnField)>,
+    floating: Option<(Coord, PhysicalPieceOnField)>,
     focus: HashMap<Coord, bool /* whether floating */>,
     a_side_focus_index: Option<usize>,
     ia_side_focus_index: Option<usize>,
@@ -507,7 +507,7 @@ impl Field {
         let nontam2piece = self.on_hop1zuo1_mut(side, |v| v.swap_remove(ind));
 
         self.field
-            .insert(coord, PieceOnField::NonTam2(nontam2piece, side));
+            .insert(coord, PhysicalPieceOnField::NonTam2(nontam2piece, side));
         self.focus.insert(coord, false);
 
         self.debug_assert_49_piece();
@@ -906,7 +906,7 @@ impl Field {
         let physical_tam = PhysicalTam { image: res };
 
         let mut hashmap = HashMap::new();
-        hashmap.insert((Row::O, Column::Z), PieceOnField::Tam2(physical_tam));
+        hashmap.insert((Row::O, Column::Z), PhysicalPieceOnField::Tam2(physical_tam));
 
         for (character, col, row, profession, color) in Field::INITIAL_BOARD.iter() {
             let char_image = load_from_80x80(character, piece_dimension);
@@ -916,7 +916,7 @@ impl Field {
 
             hashmap.insert(
                 (*row, *col),
-                PieceOnField::NonTam2(
+                PhysicalPieceOnField::NonTam2(
                     PhysicalNonTam2Piece {
                         color: *color,
                         profession: *profession,
