@@ -32,9 +32,9 @@ checksum = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 
 [[package]]
 name = "cetkaik_core"
-version = "0.1.1"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc6906a6bddc46f011caf370419b82d5cbeb2e35751fa57ebedf39e94842f7fa"
+checksum = "6412c905654a9179f99891c2fb0943679cc1dd85b2078a595aff87690bad28f3"
 
 [[package]]
 name = "cfg-if"

@@ -85,44 +85,30 @@ const RDAU: &[u8] = include_bytes!("rdau.png_80x80.png");
 const RIO: &[u8] = include_bytes!("rio.png_80x80.png");
 const RUAI: &[u8] = include_bytes!("ruai.png_80x80.png");
 
+use cetkaik_core::absolute::{Column, Coord, Row, Side};
 use cetkaik_core::{Color, Profession};
-use cetkaik_core::absolute::{Side, Row, Column, Coord};
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct LogicalNonTam2Piece {
-    pub color: Color,
-    pub profession: Profession,
-}
+type LogicalNonTam2Piece = cetkaik_core::absolute::NonTam2Piece;
 
 impl PhysicalNonTam2Piece {
     pub fn as_logical(&self) -> LogicalNonTam2Piece {
         LogicalNonTam2Piece {
             color: self.color,
-            profession: self.profession,
+            prof: self.profession,
         }
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub struct LogicalTam {}
-
-impl PhysicalTam {
-    pub fn as_logical(&self) -> LogicalTam {
-        LogicalTam {}
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum LogicalPieceOnField {
-    NonTam2(LogicalNonTam2Piece, Side),
-    Tam2(LogicalTam),
-}
+type LogicalPieceOnField = cetkaik_core::absolute::Piece;
 
 impl PhysicalPieceOnField {
     pub fn as_logical(&self) -> LogicalPieceOnField {
         match self {
-            PhysicalPieceOnField::NonTam2(p, s) => LogicalPieceOnField::NonTam2(p.as_logical(), *s),
-            PhysicalPieceOnField::Tam2(p) => LogicalPieceOnField::Tam2(p.as_logical()),
+            PhysicalPieceOnField::NonTam2(p, s) => LogicalPieceOnField::NonTam2Piece{
+                side: *s,
+                prof: p.as_logical().prof, 
+                color: p.as_logical().color,
+            },
+            PhysicalPieceOnField::Tam2(_) => LogicalPieceOnField::Tam2,
         }
     }
 }
@@ -212,11 +198,8 @@ pub struct Field {
     ia_side_focus_index: Option<usize>,
 }
 
-#[derive(Clone)]
 pub struct LogicalField {
-    pub field: HashMap<Coord, LogicalPieceOnField>,
-    pub a_side_hop1zuo1: Vec<LogicalNonTam2Piece>,
-    pub ia_side_hop1zuo1: Vec<LogicalNonTam2Piece>,
+    pub f: cetkaik_core::absolute::Field,
     pub floating: Option<(Coord, LogicalPieceOnField)>,
 }
 
@@ -224,21 +207,23 @@ impl Field {
     #[must_use]
     pub fn to_logical(&self) -> LogicalField {
         LogicalField {
-            field: self
-                .field
-                .iter()
-                .map(|(k, v)| (*k, v.as_logical()))
-                .collect(),
-            a_side_hop1zuo1: self
-                .a_side_hop1zuo1
-                .iter()
-                .map(PhysicalNonTam2Piece::as_logical)
-                .collect(),
-            ia_side_hop1zuo1: self
-                .ia_side_hop1zuo1
-                .iter()
-                .map(PhysicalNonTam2Piece::as_logical)
-                .collect(),
+            f: cetkaik_core::absolute::Field {
+                board: self
+                    .field
+                    .iter()
+                    .map(|(k, v)| (*k, v.as_logical()))
+                    .collect(),
+                a_side_hop1zuo1: self
+                    .a_side_hop1zuo1
+                    .iter()
+                    .map(PhysicalNonTam2Piece::as_logical)
+                    .collect(),
+                ia_side_hop1zuo1: self
+                    .ia_side_hop1zuo1
+                    .iter()
+                    .map(PhysicalNonTam2Piece::as_logical)
+                    .collect(),
+            },
             floating: match &self.floating {
                 None => None,
                 Some((c, p)) => Some((*c, p.as_logical())),
@@ -906,7 +891,10 @@ impl Field {
         let physical_tam = PhysicalTam { image: res };
 
         let mut hashmap = HashMap::new();
-        hashmap.insert((Row::O, Column::Z), PhysicalPieceOnField::Tam2(physical_tam));
+        hashmap.insert(
+            (Row::O, Column::Z),
+            PhysicalPieceOnField::Tam2(physical_tam),
+        );
 
         for (character, col, row, profession, color) in Field::INITIAL_BOARD.iter() {
             let char_image = load_from_80x80(character, piece_dimension);
