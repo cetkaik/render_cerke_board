@@ -391,7 +391,7 @@ dependencies = [
 
 [[package]]
 name = "render_cerke_board"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "cetkaik_core",
  "image",
