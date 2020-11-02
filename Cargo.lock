@@ -188,6 +188,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "interpolation"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3b7357d2bbc5ee92f8e899ab645233e43d21407573cceb37fed8bc3dede2c02"
+
+[[package]]
 name = "jpeg-decoder"
 version = "0.1.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -391,7 +397,7 @@ dependencies = [
 
 [[package]]
 name = "render_cerke_board"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "cetkaik_core",
  "image",
@@ -437,12 +443,13 @@ checksum = "8795d6e0e17485803cc10ef126bb8c0d59b7c61b219d66cfe0b3216dd0e8580a"
 
 [[package]]
 name = "wood_grain"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38f333d156eaf26e0aacf06514248d57ecd3ee1c8905a0f801f82aaae6017715"
+checksum = "7047cd7ad6bbd612ac415a9a22cc94ca416cd3c09ef7dcbef54605073361af0f"
 dependencies = [
  "cetkaik_core",
  "image",
+ "interpolation",
  "rand",
  "rand_distr",
 ]

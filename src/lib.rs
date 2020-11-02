@@ -846,16 +846,17 @@ impl Field {
     #[must_use]
     pub fn new() -> Field {
         use rand::seq::SliceRandom;
-        use wood_grain::brightwood;
+        use wood_grain::{BRIGHT_WOOD, wood};
 
         let piece_dimension = 80;
         let padding = 4;
 
-        let raw_wood = brightwood(
+        let raw_wood = wood(
             (piece_dimension + padding) * 6 + piece_dimension,
             (piece_dimension + padding) * 7 + piece_dimension,
             f64::from(piece_dimension) / 2.,
-            12.33
+            12.33,
+            &BRIGHT_WOOD
         );
 
         //raw_wood.save("rawwood.png").unwrap();
