@@ -855,6 +855,7 @@ impl Field {
             (piece_dimension + padding) * 6 + piece_dimension,
             (piece_dimension + padding) * 7 + piece_dimension,
             f64::from(piece_dimension) / 2.,
+            12.33
         );
 
         //raw_wood.save("rawwood.png").unwrap();

@@ -437,9 +437,9 @@ checksum = "8795d6e0e17485803cc10ef126bb8c0d59b7c61b219d66cfe0b3216dd0e8580a"
 
 [[package]]
 name = "wood_grain"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c70dc56fa2be3f433bf7d354df3ad21071c08408e7bfd3f26a3e8ceb8328dbb"
+checksum = "38f333d156eaf26e0aacf06514248d57ecd3ee1c8905a0f801f82aaae6017715"
 dependencies = [
  "cetkaik_core",
  "image",
