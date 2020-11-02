@@ -103,9 +103,9 @@ type LogicalPieceOnField = cetkaik_core::absolute::Piece;
 impl PhysicalPieceOnField {
     pub fn as_logical(&self) -> LogicalPieceOnField {
         match self {
-            PhysicalPieceOnField::NonTam2(p, s) => LogicalPieceOnField::NonTam2Piece{
+            PhysicalPieceOnField::NonTam2(p, s) => LogicalPieceOnField::NonTam2Piece {
                 side: *s,
-                prof: p.as_logical().prof, 
+                prof: p.as_logical().prof,
                 color: p.as_logical().color,
             },
             PhysicalPieceOnField::Tam2(_) => LogicalPieceOnField::Tam2,
@@ -233,7 +233,6 @@ impl Field {
 }
 
 mod background;
-mod noise;
 
 fn load_from_80x80(data: &'static [u8], dimension: u32) -> image::RgbImage {
     let image = image::load_from_memory(data).unwrap().to_rgb();
@@ -847,17 +846,15 @@ impl Field {
     #[must_use]
     pub fn new() -> Field {
         use rand::seq::SliceRandom;
+        use wood_grain::brightwood;
 
         let piece_dimension = 80;
         let padding = 4;
 
-        let raw_wood = image::imageops::colorops::brighten(
-            &noise::rawwood(
-                (piece_dimension + padding) * 6 + piece_dimension,
-                (piece_dimension + padding) * 7 + piece_dimension,
-                f64::from(piece_dimension) / 2.,
-            ),
-            20,
+        let raw_wood = brightwood(
+            (piece_dimension + padding) * 6 + piece_dimension,
+            (piece_dimension + padding) * 7 + piece_dimension,
+            f64::from(piece_dimension) / 2.,
         );
 
         //raw_wood.save("rawwood.png").unwrap();
