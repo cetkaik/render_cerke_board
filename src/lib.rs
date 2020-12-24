@@ -49,7 +49,7 @@ mod tests {
         field.render(Side::ASide).save("b6.png").unwrap();
 
         field
-            .from_hop1zuo1(
+            .place_from_hop1zuo1(
                 (Row::O, Column::M),
                 Side::IASide,
                 Color::Huok2,
@@ -235,7 +235,7 @@ impl Field {
 mod background;
 
 fn load_from_80x80(data: &'static [u8], dimension: u32) -> image::RgbImage {
-    let image = image::load_from_memory(data).unwrap().to_rgb();
+    let image = image::load_from_memory(data).unwrap().to_rgb8();
     if dimension == 80 {
         image
     } else {
@@ -465,7 +465,7 @@ impl Field {
     /// Will return `Err` if either:
     /// * `coord` is already occupied
     /// * the `side`'s hop1zuo1 does not contain the piece specified by the `color` and `profession`
-    pub fn from_hop1zuo1(
+    pub fn place_from_hop1zuo1(
         &mut self,
         coord: Coord,
         side: Side,
