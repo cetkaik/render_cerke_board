@@ -1,6 +1,6 @@
 [package]
 name = "render_cerke_board"
-version = "0.1.11"
+version = "0.1.12"
 authors = ["jekto_vatimeliju <jekto.vatimeliju@gmail.com>"]
 edition = "2018"
 description = "See https://sites.google.com/view/cet2kaik/the-standardized-rule-in-english for context."
@@ -13,4 +13,4 @@ image = "0.23.12"
 rand = "0.8.0"
 rand_distr = "0.4.0"
 cetkaik_core = "0.2.0"
-wood_grain = "0.1.2"
+wood_grain = "0.1.3"
