@@ -54,16 +54,16 @@ fn rawboard(square_size_in_pixel: f32) -> image::RgbImage {
 
         /* the board is already drawn */
         /* then draw the squares */
-        if -1.5 <= cx && cx <= 1.5 && -1.5 <= cy && cy <= 1.5 {
+        if (-1.5..=1.5).contains(&cx) && (-1.5..=1.5).contains(&cy) {
             *pixel = tam2hue_color;
         }
-        if 1.5 <= cx.abs() && cx.abs() <= 2.5 && 1.5 <= cy.abs() && cy.abs() <= 2.5 {
+        if (1.5..=2.5).contains(&cx.abs()) && (1.5..=2.5).contains(&cy.abs()) {
             *pixel = tam2hue_color;
         }
-        if (-2.5 <= cx && cx <= 2.5 && -0.5 <= cy && cy <= 0.5)
-            || (-2.5 <= cy && cy <= 2.5 && -0.5 <= cx && cx <= 0.5)
+        if ((-2.5..=2.5).contains(&cx) && (-0.5..=0.5).contains(&cy))
+            || ((-2.5..=2.5).contains(&cy) && (-0.5..=0.5).contains(&cx))
         {
-            *pixel = if -0.5 <= cx && cx <= 0.5 && -0.5 <= cy && cy <= 0.5 {
+            *pixel = if (-0.5..=0.5).contains(&cx) && (-0.5..=0.5).contains(&cy) {
                 tam2zo1_color
             } else {
                 tam2nua2_color

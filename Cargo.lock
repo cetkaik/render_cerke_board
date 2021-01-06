@@ -38,9 +38,9 @@ checksum = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 
 [[package]]
 name = "cetkaik_core"
-version = "0.2.0"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dfd22e727ea13f76fae45b3d16dc12ce50c396e6b56c46ca130fd80941f9c38c"
+checksum = "f34f97f8b7e84f0bf817bd7c59d0c797f796d2b104684867b70190ece8972e85"
 dependencies = [
  "maplit",
 ]
@@ -330,9 +330,9 @@ checksum = "237a5ed80e274dbc66f86bd59c1e25edc039660be53194b5fe0a482e0f2612ea"
 
 [[package]]
 name = "rand"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a76330fb486679b4ace3670f117bbc9e16204005c4bde9c4bd372f45bed34f12"
+checksum = "c24fcd450d3fa2b592732565aa4f17a27a61c65ece4726353e000939b0edee34"
 dependencies = [
  "libc",
  "rand_chacha",
@@ -405,7 +405,7 @@ dependencies = [
 
 [[package]]
 name = "render_cerke_board"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "cetkaik_core",
  "image",
