@@ -12,45 +12,45 @@ extern crate image;
 mod tests {
     #[test]
     fn test() {
-        use super::{Color, Column, Field, Profession, Row, Side};
+        use super::{Color, Column, Field, Profession, Row, Side, Coord};
         let mut field = Field::new();
         field.render(Side::IASide).save("a.png").unwrap();
         field.render(Side::ASide).save("b.png").unwrap();
 
         field
-            .move_to_opponent_hop1zuo1((Row::A, Column::K))
+            .move_to_opponent_hop1zuo1(Coord(Row::A, Column::K))
             .unwrap();
 
         field.render(Side::IASide).save("a2.png").unwrap();
         field.render(Side::ASide).save("b2.png").unwrap();
 
         field
-            .move_to_empty_square((Row::A, Column::K), (Row::A, Column::L))
+            .move_to_empty_square(Coord(Row::A, Column::K), Coord(Row::A, Column::L))
             .unwrap();
 
         field.render(Side::IASide).save("a3.png").unwrap();
         field.render(Side::ASide).save("b3.png").unwrap();
 
         field
-            .step_on_occupied((Row::A, Column::P), (Row::A, Column::M))
+            .step_on_occupied(Coord(Row::A, Column::P), Coord(Row::A, Column::M))
             .unwrap();
 
         field.render(Side::IASide).save("a4.png").unwrap();
         field.render(Side::ASide).save("b4.png").unwrap();
 
-        field.relocate_stepping((Row::O, Column::Z)).unwrap();
+        field.relocate_stepping(Coord(Row::O, Column::Z)).unwrap();
 
         field.render(Side::IASide).save("a5.png").unwrap();
         field.render(Side::ASide).save("b5.png").unwrap();
 
-        field.descend_from_stepping((Row::O, Column::C)).unwrap();
+        field.descend_from_stepping(Coord(Row::O, Column::C)).unwrap();
 
         field.render(Side::IASide).save("a6.png").unwrap();
         field.render(Side::ASide).save("b6.png").unwrap();
 
         field
             .place_from_hop1zuo1(
-                (Row::O, Column::M),
+                Coord(Row::O, Column::M),
                 Side::IASide,
                 Color::Huok2,
                 Profession::Kua2,
@@ -261,7 +261,7 @@ pub enum OperationError {
 }
 
 fn get_horiz_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
-    let (_, col) = coord;
+    let Coord(_, col) = coord;
     (match col {
         Column::K => -4,
         Column::L => -3,
@@ -279,7 +279,7 @@ fn get_horiz_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
 }
 
 fn get_vert_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
-    let (row, _) = coord;
+    let Coord(row, _) = coord;
     (match row {
         Row::A => -4,
         Row::E => -3,
@@ -711,9 +711,9 @@ impl Field {
     }
 
     fn render_main_field(&self, mut background: &mut image::RgbImage, down_side: Side) {
-        for (row, col) in self.field.keys() {
-            let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
-            let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
+        for Coord(row, col) in self.field.keys() {
+            let horiz_offset = get_horiz_offset_from_coord(Coord(*row, *col), down_side);
+            let vert_offset = get_vert_offset_from_coord(Coord(*row, *col), down_side);
             let mut sub_image = self.get_subimage_from_horiz_vert_offset(
                 &mut background,
                 horiz_offset,
@@ -721,8 +721,8 @@ impl Field {
             );
             self.place_img_on_subimg_regarding_side(
                 down_side,
-                self.field[&(*row, *col)].physical_side(),
-                &self.field[&(*row, *col)].image(),
+                self.field[&Coord(*row, *col)].physical_side(),
+                &self.field[&Coord(*row, *col)].image(),
                 &mut sub_image,
             );
         }
@@ -748,10 +748,10 @@ impl Field {
         self.render_main_field(&mut background, down_side);
 
         // then render the focuses
-        for (row, col) in self.focus.keys() {
-            let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
-            let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
-            if !self.focus[&(*row, *col)]
+        for Coord(row, col) in self.focus.keys() {
+            let horiz_offset = get_horiz_offset_from_coord(Coord(*row, *col), down_side);
+            let vert_offset = get_vert_offset_from_coord(Coord(*row, *col), down_side);
+            if !self.focus[&Coord(*row, *col)]
             /* not floating */
             {
                 let mut sub_image = self.get_subimage_from_horiz_vert_offset(
@@ -760,7 +760,7 @@ impl Field {
                     vert_offset,
                 );
                 self.put_border_on_sub_image(&mut sub_image, 9);
-            } else if let Some(((row2, col2), piece)) = &self.floating {
+            } else if let Some((Coord(row2, col2), piece)) = &self.floating {
                 // if equal, handle later
                 if (row2, col2) != (&*row, &*col) {
                     let mut sub_image = background.sub_image(
@@ -804,9 +804,9 @@ impl Field {
             }
         }
 
-        if let Some(((row, col), piece)) = &self.floating {
-            let horiz_offset = get_horiz_offset_from_coord((*row, *col), down_side);
-            let vert_offset = get_vert_offset_from_coord((*row, *col), down_side);
+        if let Some((Coord(row, col), piece)) = &self.floating {
+            let horiz_offset = get_horiz_offset_from_coord(Coord(*row, *col), down_side);
+            let vert_offset = get_vert_offset_from_coord(Coord(*row, *col), down_side);
             let mut sub_image = background.sub_image(
                 ((width / 2 - self.piece_dimension / 2) as i32
                     - (self.square_dimension as i32 - self.piece_dimension as i32) / 2
@@ -835,7 +835,7 @@ impl Field {
                 &mut sub_image,
             );
 
-            if self.focus.contains_key(&(*row, *col)) {
+            if self.focus.contains_key(&Coord(*row, *col)) {
                 self.put_border_on_sub_image(&mut sub_image, 9);
             }
         }
@@ -891,7 +891,7 @@ impl Field {
 
         let mut hashmap = HashMap::new();
         hashmap.insert(
-            (Row::O, Column::Z),
+            Coord(Row::O, Column::Z),
             PhysicalPieceOnField::Tam2(physical_tam),
         );
 
@@ -902,7 +902,7 @@ impl Field {
             // res.save(format!("rawwood_{}.png", i)).unwrap();
 
             hashmap.insert(
-                (*row, *col),
+                Coord(*row, *col),
                 PhysicalPieceOnField::NonTam2(
                     PhysicalNonTam2Piece {
                         color: *color,
