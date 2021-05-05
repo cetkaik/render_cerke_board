@@ -13,14 +13,14 @@ mod tests {
     #[test]
     fn test2() {
         use super::{Field, Side};
-        let field = Field::new(160, 8);
+        let field = Field::new(160, 8, 24.66);
         field.render(Side::IASide).save("c.png").unwrap();
     }
 
     #[test]
     fn test() {
         use super::{Color, Column, Coord, Field, Profession, Row, Side};
-        let mut field = Field::new(80, 4);
+        let mut field = Field::new(80, 4, 12.33);
         field.render(Side::IASide).save("a.png").unwrap();
         field.render(Side::ASide).save("b.png").unwrap();
 
@@ -307,7 +307,7 @@ fn get_vert_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
 
 impl Default for Field {
     fn default() -> Self {
-        Self::new(80, 4)
+        Self::new(80, 4, 12.33)
     }
 }
 
@@ -853,7 +853,7 @@ impl Field {
     }
 
     #[must_use]
-    pub fn new(piece_dimension: u32, padding: u32) -> Field {
+    pub fn new(piece_dimension: u32, padding: u32, length_scale: f64) -> Field {
         use rand::seq::SliceRandom;
         use wood_grain::{wood, BRIGHT_WOOD};
 
@@ -861,7 +861,7 @@ impl Field {
             (piece_dimension + padding) * 6 + piece_dimension,
             (piece_dimension + padding) * 7 + piece_dimension,
             f64::from(piece_dimension) / 2.,
-            12.33,
+            length_scale,
             &BRIGHT_WOOD,
         )
         .expect("should not panic here, since converting u32 to f64 never results in an infinity");
@@ -907,7 +907,7 @@ impl Field {
             let char_image = load_from_80x80(character, piece_dimension);
 
             let res = multiply_image(&char_image, &pieces[i])
-            .expect("The dimension of `char_image` differs from that of `pieces[i]`");
+                .expect("The dimension of `char_image` differs from that of `pieces[i]`");
             // res.save(format!("rawwood_{}.png", i)).unwrap();
 
             hashmap.insert(
