@@ -11,9 +11,16 @@ extern crate image;
 #[cfg(test)]
 mod tests {
     #[test]
+    fn test2() {
+        use super::{Field, Side};
+        let field = Field::new(160, 8);
+        field.render(Side::IASide).save("c.png").unwrap();
+    }
+
+    #[test]
     fn test() {
-        use super::{Color, Column, Field, Profession, Row, Side, Coord};
-        let mut field = Field::new();
+        use super::{Color, Column, Coord, Field, Profession, Row, Side};
+        let mut field = Field::new(80, 4);
         field.render(Side::IASide).save("a.png").unwrap();
         field.render(Side::ASide).save("b.png").unwrap();
 
@@ -43,7 +50,9 @@ mod tests {
         field.render(Side::IASide).save("a5.png").unwrap();
         field.render(Side::ASide).save("b5.png").unwrap();
 
-        field.descend_from_stepping(Coord(Row::O, Column::C)).unwrap();
+        field
+            .descend_from_stepping(Coord(Row::O, Column::C))
+            .unwrap();
 
         field.render(Side::IASide).save("a6.png").unwrap();
         field.render(Side::ASide).save("b6.png").unwrap();
@@ -298,7 +307,7 @@ fn get_vert_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
 
 impl Default for Field {
     fn default() -> Self {
-        Self::new()
+        Self::new(80, 4)
     }
 }
 
@@ -844,20 +853,18 @@ impl Field {
     }
 
     #[must_use]
-    pub fn new() -> Field {
+    pub fn new(piece_dimension: u32, padding: u32) -> Field {
         use rand::seq::SliceRandom;
-        use wood_grain::{BRIGHT_WOOD, wood};
-
-        let piece_dimension = 80;
-        let padding = 4;
+        use wood_grain::{wood, BRIGHT_WOOD};
 
         let raw_wood = wood(
             (piece_dimension + padding) * 6 + piece_dimension,
             (piece_dimension + padding) * 7 + piece_dimension,
             f64::from(piece_dimension) / 2.,
             12.33,
-            &BRIGHT_WOOD
-        );
+            &BRIGHT_WOOD,
+        )
+        .expect("should not panic here, since converting u32 to f64 never results in an infinity");
 
         //raw_wood.save("rawwood.png").unwrap();
 
@@ -883,7 +890,8 @@ impl Field {
 
         let tam2_image = load_from_80x80(&BTAM, piece_dimension);
 
-        let res = multiply_image(&tam2_image, &pieces[i]).unwrap();
+        let res = multiply_image(&tam2_image, &pieces[i])
+            .expect("The dimension of `tam2_image` differs from that of `pieces[i]`");
         //res.save(format!("rawwood_{}.png", i)).unwrap();
         i += 1;
 
@@ -898,7 +906,8 @@ impl Field {
         for (character, col, row, profession, color) in Field::INITIAL_BOARD.iter() {
             let char_image = load_from_80x80(character, piece_dimension);
 
-            let res = multiply_image(&char_image, &pieces[i]).unwrap();
+            let res = multiply_image(&char_image, &pieces[i])
+            .expect("The dimension of `char_image` differs from that of `pieces[i]`");
             // res.save(format!("rawwood_{}.png", i)).unwrap();
 
             hashmap.insert(
