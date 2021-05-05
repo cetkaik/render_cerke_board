@@ -1,6 +1,6 @@
 [package]
 name = "render_cerke_board"
-version = "0.1.15"
+version = "0.1.16"
 authors = ["jekto_vatimeliju <jekto.vatimeliju@gmail.com>"]
 edition = "2018"
 description = "See https://sites.google.com/view/cet2kaik/the-standardized-rule-in-english for context."
