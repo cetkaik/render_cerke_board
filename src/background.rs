@@ -2,7 +2,7 @@ const TAK1: &[u8] = include_bytes!("optimum.png");
 
 pub fn gen_bg(square_size_in_pixel: f32) -> image::RgbImage {
     if (square_size_in_pixel - 100.0).abs() < std::f32::EPSILON {
-        return image::load_from_memory(&TAK1).unwrap().to_rgb8();
+        return image::load_from_memory(TAK1).unwrap().to_rgb8();
     }
 
     rawboard(square_size_in_pixel)

@@ -1,8 +1,8 @@
 [package]
 name = "render_cerke_board"
-version = "0.1.16"
+version = "0.1.17"
 authors = ["jekto_vatimeliju <jekto.vatimeliju@gmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "See https://sites.google.com/view/cet2kaik/the-standardized-rule-in-english for context."
 license = "MIT"
 exclude = [ "*.png" ]

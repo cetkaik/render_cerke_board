@@ -187,7 +187,7 @@ fn multiply_image(a: &image::RgbImage, b: &image::RgbImage) -> Option<image::Rgb
     }
     let mut c = image::RgbImage::new(width, height);
     for (x, y, pixel) in c.enumerate_pixels_mut() {
-        *pixel = multiply_pixel(*a.get_pixel(x, y), *b.get_pixel(x, y))
+        *pixel = multiply_pixel(*a.get_pixel(x, y), *b.get_pixel(x, y));
     }
     Some(c)
 }
@@ -233,10 +233,7 @@ impl Field {
                     .map(PhysicalNonTam2Piece::as_logical)
                     .collect(),
             },
-            floating: match &self.floating {
-                None => None,
-                Some((c, p)) => Some((*c, p.as_logical())),
-            },
+            floating: self.floating.as_ref().map(|(c, p)| (*c, p.as_logical())),
         }
     }
 }
@@ -888,7 +885,7 @@ impl Field {
 
         let mut i = 0;
 
-        let tam2_image = load_from_80x80(&BTAM, piece_dimension);
+        let tam2_image = load_from_80x80(BTAM, piece_dimension);
 
         let res = multiply_image(&tam2_image, &pieces[i])
             .expect("The dimension of `tam2_image` differs from that of `pieces[i]`");
