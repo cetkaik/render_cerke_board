@@ -5,7 +5,7 @@ authors = ["jekto_vatimeliju <jekto.vatimeliju@gmail.com>"]
 edition = "2021"
 description = "See https://sites.google.com/view/cet2kaik/the-standardized-rule-in-english for context."
 license = "MIT"
-exclude = [ "*.png" ]
+exclude = [ "images/*" ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
