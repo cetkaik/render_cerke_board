@@ -13,5 +13,6 @@ exclude = [ "images/*" ]
 image = "0.23.14"
 rand = "0.8.3"
 rand_distr = "0.4.0"
-cetkaik_core = "0.3.8"
+cetkaik_fundamental = "1.0.0"
+cetkaik_naive_representation = "1.0.0"
 wood_grain = "0.2.1"

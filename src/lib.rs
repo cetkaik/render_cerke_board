@@ -12,62 +12,62 @@ extern crate image;
 mod tests {
     #[test]
     fn test2() {
-        use super::{Field, Side};
+        use super::{Field, AbsoluteSide};
         let field = Field::new(160, 8, 24.66);
-        field.render(Side::IASide).save("c.png").unwrap();
+        field.render(AbsoluteSide::IASide).save("c.png").unwrap();
     }
 
     #[test]
     fn test() {
-        use super::{Color, Column, Coord, Field, Profession, Row, Side};
+        use super::{Color, Column, Coord, Field, Profession, Row, AbsoluteSide};
         let mut field = Field::new(80, 4, 12.33);
-        field.render(Side::IASide).save("a.png").unwrap();
-        field.render(Side::ASide).save("b.png").unwrap();
+        field.render(AbsoluteSide::IASide).save("a.png").unwrap();
+        field.render(AbsoluteSide::ASide).save("b.png").unwrap();
 
         field
             .move_to_opponent_hop1zuo1(Coord(Row::A, Column::K))
             .unwrap();
 
-        field.render(Side::IASide).save("a2.png").unwrap();
-        field.render(Side::ASide).save("b2.png").unwrap();
+        field.render(AbsoluteSide::IASide).save("a2.png").unwrap();
+        field.render(AbsoluteSide::ASide).save("b2.png").unwrap();
 
         field
             .move_to_empty_square(Coord(Row::A, Column::K), Coord(Row::A, Column::L))
             .unwrap();
 
-        field.render(Side::IASide).save("a3.png").unwrap();
-        field.render(Side::ASide).save("b3.png").unwrap();
+        field.render(AbsoluteSide::IASide).save("a3.png").unwrap();
+        field.render(AbsoluteSide::ASide).save("b3.png").unwrap();
 
         field
             .step_on_occupied(Coord(Row::A, Column::P), Coord(Row::A, Column::M))
             .unwrap();
 
-        field.render(Side::IASide).save("a4.png").unwrap();
-        field.render(Side::ASide).save("b4.png").unwrap();
+        field.render(AbsoluteSide::IASide).save("a4.png").unwrap();
+        field.render(AbsoluteSide::ASide).save("b4.png").unwrap();
 
         field.relocate_stepping(Coord(Row::O, Column::Z)).unwrap();
 
-        field.render(Side::IASide).save("a5.png").unwrap();
-        field.render(Side::ASide).save("b5.png").unwrap();
+        field.render(AbsoluteSide::IASide).save("a5.png").unwrap();
+        field.render(AbsoluteSide::ASide).save("b5.png").unwrap();
 
         field
             .descend_from_stepping(Coord(Row::O, Column::C))
             .unwrap();
 
-        field.render(Side::IASide).save("a6.png").unwrap();
-        field.render(Side::ASide).save("b6.png").unwrap();
+        field.render(AbsoluteSide::IASide).save("a6.png").unwrap();
+        field.render(AbsoluteSide::ASide).save("b6.png").unwrap();
 
         field
             .place_from_hop1zuo1(
                 Coord(Row::O, Column::M),
-                Side::IASide,
+                AbsoluteSide::IASide,
                 Color::Huok2,
                 Profession::Kua2,
             )
             .unwrap();
 
-        field.render(Side::IASide).save("a7.png").unwrap();
-        field.render(Side::ASide).save("b7.png").unwrap();
+        field.render(AbsoluteSide::IASide).save("a7.png").unwrap();
+        field.render(AbsoluteSide::ASide).save("b7.png").unwrap();
     }
 }
 
@@ -94,9 +94,9 @@ const RDAU: &[u8] = include_bytes!("rdau.png_80x80.png");
 const RIO: &[u8] = include_bytes!("rio.png_80x80.png");
 const RUAI: &[u8] = include_bytes!("ruai.png_80x80.png");
 
-use cetkaik_core::absolute::{Column, Coord, Row, Side};
-use cetkaik_core::{Color, Profession};
-type LogicalNonTam2Piece = cetkaik_core::absolute::NonTam2Piece;
+use cetkaik_naive_representation::absolute::{Column, Coord, Row};
+use cetkaik_fundamental::{Color, Profession, AbsoluteSide};
+type LogicalNonTam2Piece = cetkaik_fundamental::ColorAndProf;
 
 impl PhysicalNonTam2Piece {
     pub fn as_logical(&self) -> LogicalNonTam2Piece {
@@ -107,7 +107,7 @@ impl PhysicalNonTam2Piece {
     }
 }
 
-type LogicalPieceOnField = cetkaik_core::absolute::Piece;
+type LogicalPieceOnField = cetkaik_naive_representation::absolute::Piece;
 
 impl PhysicalPieceOnField {
     pub fn as_logical(&self) -> LogicalPieceOnField {
@@ -133,7 +133,7 @@ struct PhysicalTam {
 }
 
 enum PhysicalPieceOnField {
-    NonTam2(PhysicalNonTam2Piece, Side),
+    NonTam2(PhysicalNonTam2Piece, AbsoluteSide),
     Tam2(PhysicalTam),
 }
 
@@ -145,14 +145,14 @@ impl PhysicalPieceOnField {
         }
     }
 
-    fn physical_side(&self) -> Side {
+    fn physical_side(&self) -> AbsoluteSide {
         match self {
             PhysicalPieceOnField::NonTam2(_, s) => *s,
-            PhysicalPieceOnField::Tam2(_) => Side::IASide,
+            PhysicalPieceOnField::Tam2(_) => AbsoluteSide::IASide,
         }
     }
 
-    fn into_nontam2piece(self) -> Option<(PhysicalNonTam2Piece, Side)> {
+    fn into_nontam2piece(self) -> Option<(PhysicalNonTam2Piece, AbsoluteSide)> {
         match self {
             PhysicalPieceOnField::NonTam2(p, s) => Some((p, s)),
             PhysicalPieceOnField::Tam2(_) => None,
@@ -208,7 +208,7 @@ pub struct Field {
 }
 
 pub struct LogicalField {
-    pub f: cetkaik_core::absolute::Field,
+    pub f: cetkaik_naive_representation::absolute::Field,
     pub floating: Option<(Coord, LogicalPieceOnField)>,
 }
 
@@ -216,12 +216,12 @@ impl Field {
     #[must_use]
     pub fn to_logical(&self) -> LogicalField {
         LogicalField {
-            f: cetkaik_core::absolute::Field {
-                board: self
+            f: cetkaik_naive_representation::absolute::Field {
+                board: cetkaik_naive_representation::absolute::Board(self
                     .field
                     .iter()
                     .map(|(k, v)| (*k, v.as_logical()))
-                    .collect(),
+                    .collect()),
                 a_side_hop1zuo1: self
                     .a_side_hop1zuo1
                     .iter()
@@ -266,7 +266,7 @@ pub enum OperationError {
     ParachutingToNonEmptySquare,
 }
 
-fn get_horiz_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
+fn get_horiz_offset_from_coord(coord: Coord, down_side: AbsoluteSide) -> i32 {
     let Coord(_, col) = coord;
     (match col {
         Column::K => -4,
@@ -279,12 +279,12 @@ fn get_horiz_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
         Column::M => 3,
         Column::P => 4,
     }) * (match down_side {
-        Side::IASide => 1,
-        Side::ASide => -1,
+        AbsoluteSide::IASide => 1,
+        AbsoluteSide::ASide => -1,
     })
 }
 
-fn get_vert_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
+fn get_vert_offset_from_coord(coord: Coord, down_side: AbsoluteSide) -> i32 {
     let Coord(row, _) = coord;
     (match row {
         Row::A => -4,
@@ -297,8 +297,8 @@ fn get_vert_offset_from_coord(coord: Coord, down_side: Side) -> i32 {
         Row::AU => 3,
         Row::IA => 4,
     }) * (match down_side {
-        Side::IASide => 1,
-        Side::ASide => -1,
+        AbsoluteSide::IASide => 1,
+        AbsoluteSide::ASide => -1,
     })
 }
 
@@ -364,8 +364,8 @@ impl Field {
 
     fn place_img_on_subimg_regarding_side(
         &self,
-        down_side: Side,
-        side_to_be_compared_against: Side,
+        down_side: AbsoluteSide,
+        side_to_be_compared_against: AbsoluteSide,
         image: &image::RgbImage,
         sub_image: &mut image::SubImage<&mut image::RgbImage>,
     ) {
@@ -409,7 +409,7 @@ impl Field {
             self.field.len()
                 + self.a_side_hop1zuo1.len()
                 + self.ia_side_hop1zuo1.len()
-                + if self.floating.is_some() { 1 } else { 0 },
+                + usize::from(self.floating.is_some()),
             49
         );
     }
@@ -420,46 +420,46 @@ impl Field {
         self.a_side_focus_index = None;
     }
 
-    fn on_hop1zuo1<T, F>(&self, side: Side, f: F) -> T
+    fn on_hop1zuo1<T, F>(&self, side: AbsoluteSide, f: F) -> T
     where
         F: FnOnce(&[PhysicalNonTam2Piece]) -> T,
     {
-        if side == Side::ASide {
+        if side == AbsoluteSide::ASide {
             f(&self.a_side_hop1zuo1)
         } else {
             f(&self.ia_side_hop1zuo1)
         }
     }
 
-    fn on_hop1zuo1_mut<T, F>(&mut self, side: Side, f: F) -> T
+    fn on_hop1zuo1_mut<T, F>(&mut self, side: AbsoluteSide, f: F) -> T
     where
         F: FnOnce(&mut Vec<PhysicalNonTam2Piece>) -> T,
     {
-        if side == Side::ASide {
+        if side == AbsoluteSide::ASide {
             f(&mut self.a_side_hop1zuo1)
         } else {
             f(&mut self.ia_side_hop1zuo1)
         }
     }
 
-    fn hop1zuo1_len(&self, side: Side) -> usize {
-        if side == Side::ASide {
+    fn hop1zuo1_len(&self, side: AbsoluteSide) -> usize {
+        if side == AbsoluteSide::ASide {
             self.a_side_hop1zuo1.len()
         } else {
             self.ia_side_hop1zuo1.len()
         }
     }
 
-    fn set_hop1zuo1_focus_index(&mut self, side: Side, index: Option<usize>) {
-        if side == Side::ASide {
+    fn set_hop1zuo1_focus_index(&mut self, side: AbsoluteSide, index: Option<usize>) {
+        if side == AbsoluteSide::ASide {
             self.a_side_focus_index = index;
         } else {
             self.ia_side_focus_index = index;
         }
     }
 
-    fn get_hop1zuo1_focus_index(&self, side: Side) -> Option<usize> {
-        if side == Side::ASide {
+    fn get_hop1zuo1_focus_index(&self, side: AbsoluteSide) -> Option<usize> {
+        if side == AbsoluteSide::ASide {
             self.a_side_focus_index
         } else {
             self.ia_side_focus_index
@@ -474,7 +474,7 @@ impl Field {
     pub fn place_from_hop1zuo1(
         &mut self,
         coord: Coord,
-        side: Side,
+        side: AbsoluteSide,
         color: Color,
         profession: Profession,
     ) -> Result<(), OperationError> {
@@ -486,7 +486,7 @@ impl Field {
 
         self.delete_focus();
 
-        let ind = self.on_hop1zuo1(side, |v| {
+        let ind = self.on_hop1zuo1(side, |v: &[PhysicalNonTam2Piece]| {
             v.iter()
                 .position(|p| p.color == color && p.profession == profession)
                 .ok_or(OperationError::NoMatchingColorOrProfessionInHop1Zuo1)
@@ -649,20 +649,20 @@ impl Field {
 
     fn render_one_side_hop1zuo1(
         &self,
-        whose_hop1zuo1: Side,
-        mut background: &mut image::RgbImage,
-        down_side: Side,
+        whose_hop1zuo1: AbsoluteSide,
+        background: &mut image::RgbImage,
+        down_side: AbsoluteSide,
     ) {
         let one_if_whose_hop1zuo1_is_down: i32 = if down_side == whose_hop1zuo1 { 1 } else { -1 };
 
         let mut i: usize = 0;
-        self.on_hop1zuo1(whose_hop1zuo1, |v| {
+        self.on_hop1zuo1(whose_hop1zuo1, |v: &[PhysicalNonTam2Piece]| {
             for p in v {
                 let vert_offset = (6 + (i / 9)) as i32 * one_if_whose_hop1zuo1_is_down;
                 let horiz_offset = ((i % 9) as i32 - 4) * one_if_whose_hop1zuo1_is_down;
 
                 let mut sub_image = self.get_subimage_from_horiz_vert_offset(
-                    &mut background,
+                    background,
                     horiz_offset,
                     vert_offset,
                 );
@@ -688,7 +688,7 @@ impl Field {
             let horiz_offset = ((i % 9) as i32 - 4) * one_if_whose_hop1zuo1_is_down;
 
             let mut sub_image = self.get_subimage_from_horiz_vert_offset(
-                &mut background,
+                background,
                 horiz_offset,
                 vert_offset,
             );
@@ -716,12 +716,12 @@ impl Field {
         )
     }
 
-    fn render_main_field(&self, mut background: &mut image::RgbImage, down_side: Side) {
+    fn render_main_field(&self, background: &mut image::RgbImage, down_side: AbsoluteSide) {
         for Coord(row, col) in self.field.keys() {
             let horiz_offset = get_horiz_offset_from_coord(Coord(*row, *col), down_side);
             let vert_offset = get_vert_offset_from_coord(Coord(*row, *col), down_side);
             let mut sub_image = self.get_subimage_from_horiz_vert_offset(
-                &mut background,
+                background,
                 horiz_offset,
                 vert_offset,
             );
@@ -735,8 +735,8 @@ impl Field {
     }
 
     #[must_use]
-    pub fn render(&self, down_side: Side) -> image::RgbImage {
-        let mut background = if down_side == Side::IASide {
+    pub fn render(&self, down_side: AbsoluteSide) -> image::RgbImage {
+        let mut background = if down_side == AbsoluteSide::IASide {
             self.background.clone()
         } else {
             image::imageops::rotate180(&self.background)
@@ -744,13 +744,13 @@ impl Field {
         let (width, height) = background.dimensions();
 
         let one_if_ia_is_down: i32 = match down_side {
-            Side::IASide => 1,
-            Side::ASide => -1,
+            AbsoluteSide::IASide => 1,
+            AbsoluteSide::ASide => -1,
         };
 
         // render the pieces
-        self.render_one_side_hop1zuo1(Side::ASide, &mut background, down_side);
-        self.render_one_side_hop1zuo1(Side::IASide, &mut background, down_side);
+        self.render_one_side_hop1zuo1(AbsoluteSide::ASide, &mut background, down_side);
+        self.render_one_side_hop1zuo1(AbsoluteSide::IASide, &mut background, down_side);
         self.render_main_field(&mut background, down_side);
 
         // then render the focuses
@@ -768,7 +768,7 @@ impl Field {
                 self.put_border_on_sub_image(&mut sub_image, 9);
             } else if let Some((Coord(row2, col2), piece)) = &self.floating {
                 // if equal, handle later
-                if (row2, col2) != (&*row, &*col) {
+                if (row2, col2) != (row, col) {
                     let mut sub_image = background.sub_image(
                         ((width / 2 - self.piece_dimension / 2) as i32
                             - (self.square_dimension as i32 - self.piece_dimension as i32) / 2
@@ -916,9 +916,9 @@ impl Field {
                         image: res,
                     },
                     if *row == Row::A || *row == Row::E || *row == Row::I {
-                        Side::ASide
+                        AbsoluteSide::ASide
                     } else {
-                        Side::IASide
+                        AbsoluteSide::IASide
                     },
                 ),
             );
